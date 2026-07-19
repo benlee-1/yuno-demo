@@ -14,7 +14,8 @@ Findings from Yuno docs recon (llms.txt-indexed pages) + npm registry. Items mar
 - ✅ Full ops-agent UI round-trips verified (Playwright, 2026-07-19): refund Confirm → `REFUNDED/REFUNDED` (full R$ 89, provider CHECKOUT); Deny → nothing executes (out-of-band API check). Payment link needs a second turn (agent asks for description + payment_method_types — by design); briefing accurate. ⚠️ Duplicate order rows from repeated seeds make the agent ask disambiguation questions — wipe orders before seeding for demos.
 - ✅ Webhooks verified end-to-end on the Railway deployment (2026-07-19): dashboard x-api-key/x-secret + HMAC all verified (`signature_valid=1`), delivery within seconds. Real payload nests entity under `data.payment` (docs' flat shape kept as fallback); `type_event` arrives pre-dotted.
 - ✅ Deployed: https://web-production-05db4.up.railway.app (Railway project `montmare-yuno-demo`, service `web`, volume at /app/data for SQLite).
-- Still ⏳: 3DS card numbers, vaulted-token/subscription path (both optional beats).
+- ✅ 3DS probed (2026-07-19): NOT available on this account — no 3DS credentials configured; Yuno's 3DS test cards (4234-family, OTPs 1234/1111/2222/3333/4444) route to NMI and DECLINE via DIRECT, and the SDK rejects them client-side ("Invalid card number." — BIN check) in the browser. Double conclusion: 3DS beat stays cut, AND the browser decline remains impossible (SDK-accepted cards → Checkout approves; declining cards → SDK blocks). Narrated decline stands.
+- Still ⏳: vaulted-token/subscription path (optional stretch).
 
 ## API fundamentals
 

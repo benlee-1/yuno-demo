@@ -145,7 +145,7 @@ Refund Ana's order
 | Approval card never resolves / stream stalls | Refresh `/ops` and re-send — each request opens a fresh MCP session, so state loss is contained to the chat thread. |
 | Webhook doesn't arrive on stage | `/events` still shows the seeded/pre-show state; say retries cover you (Yuno retries 7× with backoff) and move on — check again at the 4:40 beat. |
 | Tunnel URL rotated (cloudflared restarted) | Re-paste the new URL in dashboard → Developers → Webhooks. This is why the checklist says tunnel first, dashboard second. |
-| 3DS as an optional extra | Only if asked. 3DS uses a **separate card set** — numbers live in the Yuno "3DS configuration and testing" doc; challenge OTPs are `1234`/`1111`/`2222`/`3333`/`4444`. ⏳ pull exact card numbers after the first live run and record them here: `<3DS-CARDS-TBD>`. |
+| Asked about 3DS | Not demoable on this account (no 3DS credentials configured — probed live 2026-07-19: Yuno's 3DS cards, e.g. `4234123412340003`, decline via NMI on DIRECT and are rejected client-side by the SDK). Q&A answer: the `sdk_action_required` → `continuePayment()` branch in `app/checkout/page.tsx` is exactly where a challenge would render; Yuno's 3DS test set uses OTPs `1234` (auth) / `1111` (fail) / `2222` (reject); enabling it is dashboard config (3DS credentials or a provider like Cybersource), no code change. |
 | PIX not enabled on the account | Cards-only narrative line: "Same loop handles PIX — `sdk_action_required` → `continuePayment` renders the QR — this account is card-only today." ✅ confirmed 2026-07-19: enabled methods are CARD, iDEAL, Klarna, 7Eleven, Apple Pay, Clearpay, Google Pay — no PIX. |
 
 ## Rehearsal priorities (things never yet run live)

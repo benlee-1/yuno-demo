@@ -66,8 +66,13 @@ async function beginCheckout(page: Page): Promise<FrameLocator> {
 }
 
 /** Fill secure fields (iframe) + holder/document/email (main frame). */
-async function fillCardForm(page: Page, card: FrameLocator, expiry: string) {
-  await fillField(card.locator('input[name="number"]'), SUCCESS_CARD);
+async function fillCardForm(
+  page: Page,
+  card: FrameLocator,
+  expiry: string,
+  cardNumber: string = SUCCESS_CARD,
+) {
+  await fillField(card.locator('input[name="number"]'), cardNumber);
   await fillField(card.locator('input[name="expirationDate"]'), expiry);
   await fillField(card.locator('input[name="cvv"]'), CVV);
 
@@ -205,4 +210,10 @@ test.describe("Yuno sandbox checkout (live)", () => {
       fullPage: true,
     });
   });
+
+  // NOTE (2026-07-19): a browser-flow decline was probed with Yuno's
+  // 3DS-family PAN 4234123412340003 (declines via NMI in the DIRECT
+  // workflow) — the SDK rejects it client-side ("Invalid card number.",
+  // BIN check beyond Luhn). Conclusion: no deterministic browser decline
+  // exists on this account; the demo narrates Ana's seeded DECLINED order.
 });
