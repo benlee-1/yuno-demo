@@ -18,9 +18,10 @@ function CheckoutInner() {
   const [showTestCards, setShowTestCards] = useState(false);
   const yunoRef = useRef<SdkPaymentsInstance | null>(null);
   const startedRef = useRef(false);
+  const tokenizedRef = useRef(false);
 
   useEffect(() => {
-    if (startedRef.current) return; // guard StrictMode double-run
+    if (startedRef.current) return; // guard concurrent double-run
     startedRef.current = true;
 
     let cancelled = false;
@@ -63,6 +64,7 @@ function CheckoutInner() {
           showLoading: true,
           renderMode: { type: "element" },
           async createPayment(oneTimeToken: string) {
+            tokenizedRef.current = true;
             try {
               const payRes = await fetch("/api/payments", {
                 method: "POST",
@@ -103,15 +105,27 @@ function CheckoutInner() {
 
     start();
     return () => {
+      // Cancel this run AND allow the replacement effect run to restart.
+      // (With the old `cancelled`-only cleanup, dev StrictMode deadlocked the
+      // checkout after client-side navigation: run 1 was cancelled, run 2
+      // bailed on startedRef, and the SDK never mounted.)
       cancelled = true;
+      startedRef.current = false;
     };
   }, [name, email]);
 
   async function pay() {
     setError(null);
     setPhase("paying");
+    tokenizedRef.current = false;
     try {
       await yunoRef.current?.startPayment();
+      // startPayment resolves without throwing when the SDK blocks on
+      // client-side field validation (e.g. expired date) — no token is
+      // created and no callback fires, so re-enable the button for a retry.
+      if (!tokenizedRef.current) {
+        setPhase("ready");
+      }
     } catch (e) {
       setPhase("ready");
       setError(e instanceof Error ? e.message : "Failed to start payment");

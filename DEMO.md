@@ -48,21 +48,28 @@ this file with what you actually see.
 ## Minute-by-minute arc
 
 **0:00 — Buy a coffee.** Storefront → buy as **Carlos Mendes**, success card
-`4507 9900 0000 0002` (11/28, 123, John Doe) → result page shows the payment
-outcome. Narrate: session created server-side, card form is Yuno's SDK element (PAN
-never touches our code), one-time token → our backend → `/v1/payments`. ⏳ full SDK
-loop unverified live.
+`4507 9900 0000 0002` (11/28, 123, holder Carlos Mendes). The form also requires
+**document type CPF + a valid test CPF: `529.982.247-25`** and an email — have
+them ready to type. Result page shows **"Payment approved" / SUCCEEDED** badge.
+Narrate: session created server-side, card form is Yuno's SDK secure element (PAN
+never touches our code), one-time token → our backend → `/v1/payments`.
+✅ verified live via Playwright e2e 2026-07-19 (`npm run e2e` is the pre-demo
+smoke test for this exact flow).
 
 **1:00 — Webhook, live.** Switch to `/events` — the `payment.purchase` row should
 appear within moments (page polls every 3s). Point at `signature_valid = 1`: HMAC
 verified over the raw body, timing-safe compare, deduped on idempotency key. ⏳
 
-**1:30 — A decline.** Quick second buy with the success card number but expiry
-`11/20` (expired) → different result state. Narrate the routing story: Yuno
-fails over across providers (we watched Adyen and Stripe refuse before
-Checkout.com approved a "decline" test card — an expired card is refused by
-all, hence this recipe). ⏳ exact result-page status text unverified via the
-browser SDK flow (DIRECT-workflow declines verified live).
+**1:30 — The decline story (narrated, not clicked).** There is **no reliable
+decline through the browser checkout** on this account — verified live: the SDK
+client-side-validates expiry (expired dates never leave the form, inline
+"Invalid year."), and the testing-gateway "decline" cards get APPROVED by
+failover routing (we watched Adyen refuse → Stripe refuse → Checkout.com
+approve the same card). So tell that as the routing story — it's a better
+Yuno pitch than a decline anyway — and point at **Ana Oliveira's seeded
+DECLINED order** (visible in the next beat via the agent, or on `/events`):
+declines exist in the data via the DIRECT-workflow seed (expired card at the
+API level, refused by every provider).
 
 **2:00 — The star: the ops agent.** Open `/ops`. Frame it in one line: *"This is the
 Payments Concierge pattern — an agent that acts autonomously, but only within

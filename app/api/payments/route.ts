@@ -42,6 +42,12 @@ export async function POST(req: Request) {
         checkout: { session: order.checkout_session },
         payment_method: { token: oneTimeToken },
         workflow: "SDK_CHECKOUT",
+        // Without this Yuno rejects the OTT with 400 INVALID_CUSTOMER_FOR_TOKEN
+        // ("Invalid paymentMethodOwner for token."): the payer must be the same
+        // customer the checkout session (and thus the token) was created for.
+        ...(order.customer_id
+          ? { customer_payer: { id: order.customer_id } }
+          : {}),
       },
       crypto.randomUUID(),
     );
