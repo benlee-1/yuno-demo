@@ -9,13 +9,28 @@ export const runtime = "nodejs";
  *
  * Body: { type, type_event, account_id, version: "2", retry, data }.
  * De-dupe key: data.idempotency_key (insertEvent is INSERT OR IGNORE).
- * Signature (optional, dashboard HMAC checkbox): header `x-hmac-signature`
- * = base64(HMAC-SHA256(RAW body, YUNO_WEBHOOK_SECRET)) — verify on the RAW
- * body BEFORE JSON.parse.
+ *
+ * Two independent auth layers, each active only when its env is set:
+ *  - Static headers (dashboard x-api-key / x-secret fields): Yuno echoes the
+ *    configured values verbatim on every delivery → compare against
+ *    YUNO_WEBHOOK_API_KEY / YUNO_WEBHOOK_API_SECRET.
+ *  - HMAC (dashboard "Use HMAC signing"): header `x-hmac-signature`
+ *    = base64(HMAC-SHA256(RAW body, YUNO_WEBHOOK_SECRET)) — verify on the
+ *    RAW body BEFORE JSON.parse.
+ * signature_valid records the combined verdict: 1 = every configured check
+ * passed, 0 = a configured check failed (401, order state not mutated),
+ * null = no checks configured.
  *
  * Yuno retries up to 7x on non-200, so this handler never 500s: malformed
  * payloads are logged as parse_error rows and acknowledged with 200.
  */
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, "utf8");
+  const bb = Buffer.from(b, "utf8");
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
 
 function verifySignature(
   rawBody: string,
@@ -42,16 +57,26 @@ export async function POST(req: Request) {
     // Raw body FIRST — the HMAC covers the exact bytes on the wire.
     const rawBody = await req.text();
 
-    // 1 = verified, 0 = HMAC mismatch, null = not checked (sandbox pragmatism
-    // when no secret is configured or the header is absent).
+    // Combined verdict across every configured check (see module comment).
+    const checks: boolean[] = [];
+
+    const apiKey = process.env.YUNO_WEBHOOK_API_KEY;
+    const apiSecret = process.env.YUNO_WEBHOOK_API_SECRET;
+    if (apiKey) {
+      checks.push(timingSafeStringEqual(req.headers.get("x-api-key") ?? "", apiKey));
+    }
+    if (apiSecret) {
+      checks.push(timingSafeStringEqual(req.headers.get("x-secret") ?? "", apiSecret));
+    }
+
     const secret = process.env.YUNO_WEBHOOK_SECRET;
     const signatureHeader = req.headers.get("x-hmac-signature");
-    let signatureValid: number | null = null;
     if (secret && signatureHeader) {
-      signatureValid = verifySignature(rawBody, signatureHeader, secret)
-        ? 1
-        : 0;
+      checks.push(verifySignature(rawBody, signatureHeader, secret));
     }
+
+    const signatureValid: number | null =
+      checks.length === 0 ? null : checks.every(Boolean) ? 1 : 0;
 
     let payload: Record<string, unknown> | null = null;
     try {
