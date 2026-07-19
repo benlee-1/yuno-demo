@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { GlassCard, Badge } from "@/components/ui";
+import { Marquee } from "@/components/marquee";
 
 type EventItem = {
   id: number;
@@ -71,7 +72,7 @@ function EventRow({ event, now }: { event: EventItem; now: number }) {
     ? event.type_event
     : [event.type, event.type_event].filter(Boolean).join(".") || "unknown";
   return (
-    <GlassCard className="event-enter overflow-hidden">
+    <GlassCard className="event-enter overflow-hidden transition-transform duration-200 hover:-translate-y-0.5">
       <details className="group">
         <summary className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
           <Badge tone={toneFor(event.type_event)}>
@@ -187,9 +188,22 @@ export default function EventsPage() {
         .event-enter { animation: event-enter 0.45s ease-out both; }
       `}</style>
 
-      <GlassCard className="p-6 sm:p-8">
+      <GlassCard className="overflow-hidden">
+        <Marquee
+          thin
+          glyph="☕"
+          items={[
+            "PAYMENT.PURCHASE",
+            "HMAC VERIFIED",
+            "LIVE FEED",
+            "PAYMENT.REFUND",
+            "7 RETRIES DEEP",
+          ]}
+          className="bg-primary/90 text-lime font-display text-[10px] tracking-wider py-1.5"
+        />
+        <div className="p-6 sm:p-8">
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-2xl font-extrabold tracking-tight">
+          <h1 className="font-display uppercase tracking-tight text-3xl">
             Webhook Events
           </h1>
           <span className="relative flex h-2.5 w-2.5" aria-label="live">
@@ -216,16 +230,20 @@ export default function EventsPage() {
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
+        </div>
       </GlassCard>
 
       {loaded && events.length === 0 && (
         <GlassCard className="p-10 text-center">
-          <Badge tone="pending" className="mb-4">
+          <Badge tone="pending" className="sticker mb-4 [--tilt:-2deg]">
             Waiting for events
           </Badge>
+          <p className="font-display uppercase tracking-wide text-ink/80 mb-2">
+            No events yet — the kettle&apos;s on.
+          </p>
           <p className="text-sm text-neutral-400">
-            No events yet — complete a checkout or configure the webhook in the
-            Yuno dashboard (Developers → Webhooks).
+            Complete a checkout or configure the webhook in the Yuno dashboard
+            (Developers → Webhooks).
           </p>
         </GlassCard>
       )}

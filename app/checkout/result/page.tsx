@@ -60,26 +60,31 @@ export default async function ResultPage({
       <GlassCard className="p-8 sm:p-10 text-center">
         {!order ? (
           <>
-            <h1 className="text-2xl font-extrabold mb-2">Order not found</h1>
+            <h1 className="font-display uppercase tracking-tight text-2xl mb-2">
+              Order not found
+            </h1>
             <p className="text-sm text-neutral-400 mb-6">
               We could not find that order in the demo database.
             </p>
           </>
         ) : (
           <>
-            <div
-              className={`mx-auto mb-5 w-16 h-16 rounded-full grid place-items-center text-3xl ${
-                outcome === "success"
-                  ? "bg-lime text-ink"
-                  : outcome === "declined"
-                    ? "bg-red-100 text-red-600"
-                    : "bg-pale text-primary"
-              }`}
-              aria-hidden
-            >
-              {outcome === "success" ? "✓" : outcome === "declined" ? "✕" : "…"}
+            <div className="mb-6 grid place-items-center" aria-hidden>
+              {outcome === "success" ? (
+                <span className="stamp-ink stamp-in text-primary text-4xl sm:text-5xl [--tilt:-7deg]">
+                  Approved ✓
+                </span>
+              ) : outcome === "declined" ? (
+                <span className="stamp-ink stamp-in text-red-600 text-4xl sm:text-5xl [--tilt:5deg]">
+                  Denied
+                </span>
+              ) : (
+                <span className="stamp-ink text-neutral-400 text-3xl [--tilt:-3deg]">
+                  Pending…
+                </span>
+              )}
             </div>
-            <h1 className="text-2xl font-extrabold mb-1">
+            <h1 className="font-display uppercase tracking-tight text-2xl mb-1">
               {outcome === "success"
                 ? "Payment approved"
                 : outcome === "declined"

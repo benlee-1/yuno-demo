@@ -11,6 +11,8 @@
   --color-neutral-300: #d1d5db;
   --color-neutral-100: #f1f5f9;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo-black), var(--font-inter), ui-sans-serif,
+    system-ui, sans-serif;
   --radius-btn: 14px;
   --shadow-glass: 0 8px 32px rgba(62, 79, 224, 0.12);
 }
@@ -23,6 +25,109 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   background-color: #eef2ff;
+  overflow-x: clip;
+}
+
+/* ------------------------------------------------------------------ */
+/* Marquee / ticker bands (CSS-only, pauses under reduced motion)      */
+/* ------------------------------------------------------------------ */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+.marquee-track {
+  display: inline-flex;
+  width: max-content;
+  animation: marquee-scroll 26s linear infinite;
+}
+.marquee-thin .marquee-track {
+  animation-duration: 34s;
+}
+.marquee-track > span {
+  display: inline-block;
+}
+@keyframes marquee-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Sticker / stamp motifs                                              */
+/* ------------------------------------------------------------------ */
+.sticker {
+  display: inline-flex;
+  transform: rotate(var(--tilt, -2deg));
+  transition: transform 0.2s ease;
+}
+.sticker:hover {
+  transform: rotate(calc(var(--tilt, -2deg) * 1.8)) scale(1.04);
+}
+
+/* Circular "rubber stamp" — solid ring + inner dashed ring.
+   NOTE: no `position` here — pair it with Tailwind absolute/relative. */
+.stamp-round {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  text-transform: uppercase;
+  transform: rotate(var(--tilt, 6deg));
+  transition: transform 0.2s ease;
+}
+.stamp-round::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1.5px dashed currentColor;
+  border-radius: 9999px;
+}
+.stamp-round:hover {
+  transform: rotate(calc(var(--tilt, 6deg) + 4deg)) scale(1.03);
+}
+
+/* Rectangular ink stamp (result page verdicts) */
+.stamp-ink {
+  display: inline-block;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  border: 4px solid currentColor;
+  border-radius: 10px;
+  padding: 0.28em 0.5em 0.22em;
+  transform: rotate(var(--tilt, -6deg));
+}
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(var(--tilt, -6deg)) scale(1.7);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(var(--tilt, -6deg)) scale(1);
+  }
+}
+.stamp-in {
+  /* No delay — the stamp must never be invisible at first paint
+     (screenshots/projector legibility). */
+  animation: stamp-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .stamp-in {
+    animation: none;
+  }
+  .sticker:hover,
+  .stamp-round:hover {
+    transform: rotate(var(--tilt, 0deg));
+  }
 }
 
 /* Liquid-glass gradient mesh background */

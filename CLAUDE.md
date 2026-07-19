@@ -48,9 +48,15 @@ presentation. Sandbox only — no real cards, ever.
   `data.idempotency_key`, and never 500s (Yuno retries 7×).
 - **Design tokens** live in `app/globals.css` (Tailwind v4 `@theme` block:
   `primary #3E4FE0`, `primary-dark`, `primary-light`, `pale`, `lime #C7E956`,
-  `ink`; `shadow-glass`, `rounded-btn`). Shared UI in `components/ui.tsx`
-  (GlassCard/Button/Input/Badge) and `components/nav.tsx`. Light theme only,
-  liquid-glass look (translucent white surfaces + gradient mesh background).
+  `ink`; `shadow-glass`, `rounded-btn`; `font-display` = Archivo Black via
+  next/font). Shared UI in `components/ui.tsx` (GlassCard/Button/Input/Badge),
+  `components/nav.tsx`, `components/marquee.tsx` (CSS-only ticker). Light theme
+  only, liquid-glass look (translucent white surfaces + gradient mesh
+  background) with sneaker-drop accents: marquee bands, rotated `.sticker`
+  pills, `.stamp-round` / `.stamp-ink` stamps (all in `globals.css`).
+  ⚠️ Restyle-safe zones only — the e2e specs pin exact heading/button texts,
+  `#yuno-checkout`, `.text-red-700`, `border-l-lime`, and the ops chip labels;
+  never uppercase contract text in the DOM (CSS `text-transform` is fine).
 
 ## Agent architecture (`lib/agent/*`)
 

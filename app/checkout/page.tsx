@@ -136,8 +136,16 @@ function CheckoutInner() {
     <div className="grid lg:grid-cols-[1fr_1.4fr] gap-6 items-start">
       {/* Order summary */}
       <div className="flex flex-col gap-4">
-        <GlassCard className="p-6">
-          <h2 className="text-lg font-bold mb-4">Order summary</h2>
+        <GlassCard className="relative p-6 overflow-visible">
+          <span
+            className="sticker absolute -top-3 -right-2 px-3 py-1 rounded-full bg-ink text-lime font-display text-[10px] uppercase tracking-wider shadow-lg [--tilt:4deg]"
+            aria-hidden
+          >
+            Drop 001
+          </span>
+          <h2 className="font-display uppercase tracking-tight text-lg mb-4">
+            Order summary
+          </h2>
           <dl className="flex flex-col gap-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-neutral-400">Customer</dt>
@@ -153,9 +161,13 @@ function CheckoutInner() {
               <dt className="text-neutral-400">Product</dt>
               <dd className="font-semibold">{PRODUCT}</dd>
             </div>
-            <div className="flex justify-between border-t border-white/60 pt-3">
-              <dt className="font-bold">Total</dt>
-              <dd className="font-extrabold text-primary text-lg">R$ 89,00</dd>
+            <div className="flex justify-between items-center border-t border-white/60 pt-3">
+              <dt className="font-display uppercase tracking-wide">Total</dt>
+              <dd>
+                <span className="sticker inline-block px-3 py-1 rounded-xl bg-lime text-ink font-display text-lg shadow-[0_4px_16px_rgba(199,233,86,0.45)] [--tilt:-2deg]">
+                  R$ 89,00
+                </span>
+              </dd>
             </div>
           </dl>
         </GlassCard>
@@ -165,7 +177,7 @@ function CheckoutInner() {
           <button
             type="button"
             onClick={() => setShowTestCards((v) => !v)}
-            className="w-full flex items-center justify-between text-sm font-semibold text-primary cursor-pointer"
+            className="w-full flex items-center justify-between text-sm font-display uppercase tracking-wide text-primary cursor-pointer"
           >
             <span>Sandbox test cards</span>
             <span aria-hidden>{showTestCards ? "−" : "+"}</span>
@@ -194,7 +206,9 @@ function CheckoutInner() {
 
       {/* Payment form */}
       <GlassCard className="p-6 sm:p-8">
-        <h1 className="text-xl font-extrabold mb-1">Checkout</h1>
+        <h1 className="font-display uppercase tracking-tight text-2xl mb-1">
+          Checkout
+        </h1>
         <p className="text-sm text-neutral-400 mb-5">
           Powered by Yuno — sandbox mode, no real charges.
         </p>
@@ -216,7 +230,7 @@ function CheckoutInner() {
         <Button
           onClick={pay}
           disabled={phase !== "ready"}
-          className="w-full mt-6"
+          className="w-full mt-6 py-4 text-base font-bold"
         >
           {phase === "paying" ? "Processing…" : "Pay R$ 89,00"}
         </Button>

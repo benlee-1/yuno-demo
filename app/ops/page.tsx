@@ -353,6 +353,15 @@ const SUGGESTIONS = [
   "Summarize today's payments",
 ];
 
+// Sticker-style alternating tilts for the suggestion chips (visual only —
+// labels above are part of the e2e/demo contract and must not change).
+const CHIP_TILTS = [
+  "[--tilt:-1.5deg]",
+  "[--tilt:1.5deg]",
+  "[--tilt:-1deg]",
+  "[--tilt:2deg]",
+];
+
 function friendlyError(error: Error): string {
   try {
     const parsed = JSON.parse(error.message) as { error?: string };
@@ -406,19 +415,25 @@ export default function OpsPage() {
     <div className="grid lg:grid-cols-[1fr_240px] gap-4 items-start">
       {/* Chat column */}
       <div className="flex flex-col h-[calc(100vh-11.5rem)] min-h-[28rem]">
-        <GlassCard className="px-6 py-4 mb-3 shrink-0">
+        <GlassCard className="px-6 py-4 mb-3 shrink-0 overflow-visible">
           <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-2xl bg-primary text-white grid place-items-center text-lg">
+            <span className="sticker w-9 h-9 rounded-2xl bg-primary text-white grid place-items-center text-lg [--tilt:-3deg]">
               ⚙️
             </span>
             <div>
-              <h1 className="text-lg font-extrabold leading-tight">
+              <h1 className="font-display uppercase tracking-tight text-lg leading-tight">
                 Payment Ops Agent
               </h1>
               <p className="text-xs text-neutral-400">
                 Claude + Yuno Agent Toolkit — least-privilege tools
               </p>
             </div>
+            <span
+              className="sticker ml-auto hidden sm:inline-flex px-3 py-1 rounded-full bg-lime text-ink font-display text-[10px] uppercase tracking-wider [--tilt:3deg]"
+              aria-hidden
+            >
+              Human in the loop
+            </span>
           </div>
         </GlassCard>
 
@@ -432,13 +447,13 @@ export default function OpsPage() {
                   subscriptions. Destructive actions always ask for your
                   confirmation first.
                 </p>
-                <div className="flex flex-wrap justify-center gap-2 max-w-md">
-                  {SUGGESTIONS.map((s) => (
+                <div className="flex flex-wrap justify-center gap-2.5 max-w-md">
+                  {SUGGESTIONS.map((s, i) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => void sendMessage({ text: s })}
-                      className="px-4 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/60 text-xs font-medium text-primary-dark hover:bg-white/90 hover:border-primary-light/40 transition-all cursor-pointer shadow-glass"
+                      className={`sticker px-4 py-2 rounded-full bg-white/70 backdrop-blur-md border border-primary/15 text-xs font-semibold text-primary-dark hover:bg-white hover:border-primary-light/50 cursor-pointer shadow-glass ${CHIP_TILTS[i % CHIP_TILTS.length]}`}
                     >
                       {s}
                     </button>
@@ -528,7 +543,7 @@ export default function OpsPage() {
 
       {/* Scopes sidebar */}
       <GlassCard className="p-4 lg:sticky lg:top-24">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">
+        <p className="font-display text-[11px] uppercase tracking-wider text-primary-dark mb-2">
           Enabled tool scopes
         </p>
         <ul className="space-y-1">
