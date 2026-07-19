@@ -53,3 +53,6 @@ next-env.d.ts
 # playwright
 /playwright-report/
 /test-results/
+
+# demo screencasts (large binaries, local only)
+/demo-assets/

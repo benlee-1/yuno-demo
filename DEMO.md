@@ -20,19 +20,23 @@ this file with what you actually see.
 
 ## Pre-demo checklist (T-10 minutes)
 
-- [ ] `.env.local` filled: all Yuno sandbox keys + `OPENROUTER_API_KEY` (or
-      `ANTHROPIC_API_KEY`) +
-      `YUNO_WEBHOOK_SECRET`. `npm run dev` running, http://localhost:3000 loads.
-- [ ] `npm run seed` — the summary table must show Maria Silva **SUCCEEDED**,
-      João Santos **SUCCEEDED**, Ana Oliveira **DECLINED** (any `API_ERROR_*` row
-      means creds or sandbox trouble — fix before going on). Re-running adds new
-      rows; that's fine, the agent uses the newest. ✅ verified live 2026-07-19.
-- [ ] Webhook URL configured in the Yuno dashboard (Developers → Webhooks →
-      `<origin>/api/webhooks/yuno`, HMAC enabled, secret matches
-      `YUNO_WEBHOOK_SECRET`). If presenting from localhost:
-      `cloudflared tunnel --url http://localhost:3000` — **the free tunnel URL
-      changes on every run**, so start the tunnel first, then re-paste the new URL
-      into the dashboard. ⏳ delivery latency unverified — note what you observe.
+- [ ] Primary demo host is the Railway deployment:
+      **https://web-production-05db4.up.railway.app** (project
+      `montmare-yuno-demo`, service `web`). Webhooks are configured against it
+      and land in ITS event log — so present from the deployed site, not
+      localhost. Local `npm run dev` is the fallback (localhost has no webhook
+      delivery unless you re-point the dashboard at a cloudflared tunnel).
+- [ ] **Wipe, then seed — duplicates break the agent flow.** Stale rows from
+      earlier seeds make the agent ask "which Maria?" instead of acting
+      (observed in testing). On the demo host run:
+      `sqlite3 data/demo.db "DELETE FROM orders;" && npm run seed`
+      (on Railway: via `railway ssh --service web`). Summary table must show
+      Maria Silva **SUCCEEDED**, João Santos **SUCCEEDED**, Ana Oliveira
+      **DECLINED**. ✅ verified live 2026-07-19.
+- [ ] Webhook config in the Yuno dashboard (Developers → Webhooks): DONE
+      2026-07-19 — URL `https://web-production-05db4.up.railway.app/api/webhooks/yuno`,
+      x-api-key/x-secret + HMAC all set and verified end-to-end (events arrive
+      with `sig=1` within a few seconds of payment creation).
 - [ ] `/events` is in a known state (empty, or you know which rows are pre-show).
 - [ ] Agent smoke test: open `/ops`, send **"Show recent orders"** — must return the
       seeded orders as a table within a few seconds. This also proves the remote MCP
@@ -40,8 +44,10 @@ this file with what you actually see.
       Claude Sonnet 5; full refund chain incl. MCP `paymentRetrieve` and the
       approval-gate halt on `paymentCancelOrRefund` — re-verify from the venue's
       network, since MCP sessions are IP-bound).
-- [ ] Backup screencast ready and tested: `<PATH-TO-SCREENCAST.mp4 — record during
-      first successful rehearsal>`.
+- [ ] Backup screencasts ready (recorded from live e2e runs 2026-07-19, in
+      `demo-assets/`, local only): `checkout-happy-path.webm` (~28s),
+      `agent-refund-roundtrip.webm` (~39s, incl. Confirm → REFUNDED), plus
+      deny-path, payment-link, and briefing clips.
 - [ ] Have `lib/agent/permissions.ts` open in an editor tab — you'll show it during
       the refund beat.
 
@@ -89,14 +95,19 @@ through the visible tool chain as the cards appear:
    round-trips; unknown destructive tool names fail closed via regex). Point at the
    scopes sidebar in the UI — same allowlist, rendered.
 5. Click **Confirm** → tool executes → agent re-retrieves the payment and reports
-   the final status. ⏳ verify the exact post-refund status string (expected
-   REFUNDED) in rehearsal and note it here.
+   the final status. ✅ verified live: post-refund `status: REFUNDED`,
+   `sub_status: REFUNDED`; refund transaction `type REFUND / status SUCCEEDED`,
+   full R$ 89 via provider CHECKOUT.
 
-**3:30 — Agent-initiated checkout.** Send: **"Create a payment link for R$ 150"** →
-agent returns a `checkout_url` (checkout.sandbox.y.uno). Framing, one sentence: this
+**3:30 — Agent-initiated checkout.** Send: **"Create a payment link for R$ 150"**.
+✅ Verified live, with a scripted second turn: the agent first asks for the missing
+required fields — reply **"CARD only, description: Montmare custom order"** — then
+calls `paymentLinkCreate` and returns
+`https://checkout.sandbox.y.uno/payment?session=<uuid>`. Framing, one sentence: this
 is the agentic-commerce buy-side pattern — an agent initiating a checkout on a
 user's behalf and handing back a ready-to-pay link. Ungated: creating a link asks
-for money, it doesn't move any. ⏳
+for money, it doesn't move any. (The clarifying question is a feature — narrate it:
+the agent won't invent required fields.)
 
 **4:00 — Concierge briefing.** Send: **"Summarize today's payments"** → the local
 briefing tool aggregates today's records from SQLite: count, approved vs declined,
