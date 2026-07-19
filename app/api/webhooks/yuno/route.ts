@@ -108,13 +108,21 @@ export async function POST(req: Request) {
       payload.data && typeof payload.data === "object" ? payload.data : {}
     ) as Record<string, unknown>;
 
+    // Real payloads (observed live 2026-07-19) nest the entity under
+    // data.payment / data.subscription; the docs' flat data.* shape is kept
+    // as a fallback.
+    const entity = ((typeof data.payment === "object" && data.payment) ||
+      (typeof data.subscription === "object" && data.subscription) ||
+      data) as Record<string, unknown>;
+
     const event = {
-      idempotency_key: asString(data.idempotency_key),
+      idempotency_key:
+        asString(entity.idempotency_key) ?? asString(data.idempotency_key),
       type: asString(payload.type),
       type_event: asString(payload.type_event),
-      payment_id: asString(data.id),
-      merchant_order_id: asString(data.merchant_order_id),
-      status: asString(data.status) ?? asString(data.sub_status),
+      payment_id: asString(entity.id),
+      merchant_order_id: asString(entity.merchant_order_id),
+      status: asString(entity.status) ?? asString(entity.sub_status),
       raw: rawBody,
       signature_valid: signatureValid,
     };

@@ -65,8 +65,11 @@ function SignatureBadge({ value }: { value: number | null }) {
 }
 
 function EventRow({ event, now }: { event: EventItem; now: number }) {
-  const label =
-    [event.type, event.type_event].filter(Boolean).join(".") || "unknown";
+  // Live payloads send type_event already dotted ("payment.purchase") —
+  // avoid rendering "payment.payment.purchase".
+  const label = event.type_event?.includes(".")
+    ? event.type_event
+    : [event.type, event.type_event].filter(Boolean).join(".") || "unknown";
   return (
     <GlassCard className="event-enter overflow-hidden">
       <details className="group">
