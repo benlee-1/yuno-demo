@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3e4fe0;
+  --color-primary-dark: #3040c8;
+  --color-primary-light: #6b7bff;
+  --color-pale: #dde6ff;
+  --color-lime: #c7e956;
+  --color-ink: #1a1a1a;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-100: #f1f5f9;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --radius-btn: 14px;
+  --shadow-glass: 0 8px 32px rgba(62, 79, 224, 0.12);
+}
+
+html {
+  color-scheme: light only;
+}
+
+body {
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  background-color: #eef2ff;
+}
+
+/* Liquid-glass gradient mesh background */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  background: linear-gradient(160deg, #eef2ff 0%, #e6ecff 45%, #dde6ff 100%);
+}
+.bg-mesh::before,
+.bg-mesh::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+}
+.bg-mesh::before {
+  width: 40rem;
+  height: 40rem;
+  top: -12rem;
+  left: -10rem;
+  background: radial-gradient(
+    circle,
+    rgba(107, 123, 255, 0.45),
+    rgba(107, 123, 255, 0)
+  );
+}
+.bg-mesh::after {
+  width: 36rem;
+  height: 36rem;
+  bottom: -14rem;
+  right: -8rem;
+  background: radial-gradient(
+    circle,
+    rgba(62, 79, 224, 0.28),
+    rgba(221, 230, 255, 0)
+  );
+}
+.bg-mesh .blob-lime {
+  position: absolute;
+  width: 22rem;
+  height: 22rem;
+  top: 30%;
+  right: 18%;
+  border-radius: 9999px;
+  filter: blur(110px);
+  background: radial-gradient(
+    circle,
+    rgba(199, 233, 86, 0.22),
+    rgba(199, 233, 86, 0)
+  );
+}

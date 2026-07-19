@@ -1,0 +1,105 @@
+@AGENTS.md
+
+# Montmare Store — Yuno Payments Demo
+
+One-product demo storefront ("Montmare Reserva" coffee, R$ 89,00 BRL) that
+generates **sandbox** transactions via Yuno's Seamless Web SDK, plus a
+least-privilege payment-ops agent (`/ops`). Built for a live onboarding
+presentation. Sandbox only — no real cards, ever.
+
+## Stack
+
+- Next.js 16 (App Router, root `app/` dir, `@/*` import alias), TypeScript, Tailwind CSS v4
+- `@yuno-payments/sdk-web@7.11.0` (client) + Yuno REST API via `lib/yuno.ts` (server)
+- `better-sqlite3` local store in `data/demo.db` via `lib/db.ts`
+- `ai` v7 + `@ai-sdk/anthropic` + `@yuno-payments/agent-toolkit@0.1.2` (Ops Agent, wired)
+
+## Commands
+
+- `npm run dev` — dev server (http://localhost:3000)
+- `npm run build` — production build (must pass with no `.env.local` present)
+- `npm run lint` — ESLint
+- `npx tsc --noEmit` — typecheck
+- `npm run seed` — create 3 named sandbox orders (Maria/João SUCCEEDED, Ana
+  DECLINED on purpose) so the agent has data; needs Yuno creds in `.env.local`
+
+## Docs
+
+- `CONTEXT.md` — Yuno docs recon findings (API facts, test cards, webhook shape,
+  MCP constraints); ⏳ marks anything not yet verified against the live sandbox
+- `README.md` — architecture + payment loop + agent design + setup
+- `DEMO.md` — the 5-minute presentation runbook (scripted prompts, contingencies)
+
+## Conventions & gotchas
+
+- **Amounts are DECIMAL major units.** BRL 89.00 → `amount: { currency: "BRL", value: 89 }`.
+  NOT minor units/cents (the Yuno quickstart's `2500` example is misleading).
+- **Two-header auth.** Every Yuno API call sends both `public-api-key` and
+  `private-secret-key` headers. All API calls go through `yunoFetch()` in
+  `lib/yuno.ts` — never call the Yuno API directly elsewhere.
+- **NEVER log or hardcode `YUNO_PRIVATE_SECRET_KEY`** (or any header values).
+  `yunoFetch` logs only `method path -> status`.
+- **Env is read lazily at request time** (missing creds throw `YunoConfigError`
+  which routes turn into a 500 JSON error) so the build never requires
+  `.env.local`.
+- **DB access only via `lib/db.ts`.** better-sqlite3 is a synchronous native
+  module — every route/page importing it must export `runtime = "nodejs"`.
+  Schema is created on first open; `data/*.db` is gitignored.
+- **Web SDK (client):** `import { loadScript } from "@yuno-payments/sdk-web"`,
+  then `const sdk = await loadScript({ env: "sandbox" })`,
+  `const yuno = await sdk.initialize(publicApiKey)`, then
+  `startCheckout({...})` → `mountCheckout()` → `startPayment()` on the pay
+  button, `continuePayment()` when `sdk_action_required` (e.g. 3DS). Callback
+  names are `createPayment` / `paymentResult` / `error` (the `yuno*`-prefixed
+  ones are deprecated aliases). Ground truth:
+  `node_modules/@yuno-payments/sdk-web-types/dist/index.d.ts`.
+- **Webhooks:** `/api/webhooks/yuno` verifies `x-hmac-signature` =
+  base64(HMAC-SHA256) over the RAW body before JSON.parse, dedupes on
+  `data.idempotency_key`, and never 500s (Yuno retries 7×).
+- **Design tokens** live in `app/globals.css` (Tailwind v4 `@theme` block:
+  `primary #3E4FE0`, `primary-dark`, `primary-light`, `pale`, `lime #C7E956`,
+  `ink`; `shadow-glass`, `rounded-btn`). Shared UI in `components/ui.tsx`
+  (GlassCard/Button/Input/Badge) and `components/nav.tsx`. Light theme only,
+  liquid-glass look (translucent white surfaces + gradient mesh background).
+
+## Agent architecture (`lib/agent/*`)
+
+- `lib/agent/permissions.ts` — the permissions policy module: explicit
+  `PERMISSIONS` allowlist (deliberately NOT `ALL_TOOLS_ENABLED`;
+  `payments.create/authorize/capture` intentionally absent), `REQUIRES_CONFIRMATION`
+  list, and **the confirmation gate** = `buildToolApproval()` feeding AI SDK v7
+  `toolApproval` in `app/api/chat/route.ts` (server-enforced; `isDestructiveTool`
+  fails closed via regex on unknown destructive tool names). Isomorphic on
+  purpose — the `/ops` UI imports it to render scopes and gate markers.
+- `lib/agent/toolkit.ts` — per-request toolkit build; caller MUST
+  `await toolkit.close()` (chat route does so on finish/abort/error).
+- `lib/agent/local-tools.ts` — read-only SQLite tools (`searchOrders`,
+  `listRecentOrders`, `paymentsBriefing`); the name→Yuno-ID mapping lives
+  here, not in Yuno.
+- `lib/agent/system-prompt.md` — versioned system prompt, read per request.
+- **The agent toolkit IS an MCP client** — `createYunoAgentToolkit()` connects to
+  the remote MCP at `mcp.prod.y.uno`; every tool call is a remote MCP call, so
+  the remote limits apply to us: sessions IP-bound, ~15 req/min, 30-min idle cap.
+  Hence per-request create+close, `stopWhen: stepCountIs(10)`, and demo pacing.
+
+## Env vars (see `.env.local.example`)
+
+- `YUNO_ACCOUNT_CODE` — account id used in checkout sessions/payments
+- `YUNO_PUBLIC_API_KEY` / `NEXT_PUBLIC_YUNO_PUBLIC_API_KEY` — same value; the
+  `NEXT_PUBLIC_` one is required client-side by the Web SDK
+- `YUNO_PRIVATE_SECRET_KEY` — server-only, never logged
+- `YUNO_WEBHOOK_SECRET` — webhook HMAC verification
+- `ANTHROPIC_API_KEY` — Ops Agent
+- `YUNO_API_URL` — defaults to `https://api-sandbox.y.uno`
+
+## Layout
+
+- `app/page.tsx` storefront → `app/checkout/page.tsx` (Yuno SDK mount) →
+  `app/checkout/result/page.tsx`
+- API: `app/api/checkout/session` (customer + session + order row),
+  `app/api/payments` (create payment with idempotency key),
+  `app/api/webhooks/yuno` (HMAC-verified receiver), `app/api/events` (event
+  feed, `?since=` polling), `app/api/chat` (Ops Agent stream)
+- `app/events` — live webhook log (3s poll); `app/ops` — agent chat with
+  approval cards + scopes sidebar
+- `scripts/seed.ts` — sandbox seed data (DIRECT-workflow test-card payments)
