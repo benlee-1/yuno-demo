@@ -81,6 +81,11 @@ interface SeedCustomer {
   email: string;
   cpf: string;
   cardNumber: string;
+  /** Two-digit expiry year; default 28. 20 (expired) is the only reliable
+   * decline on this account: routing fails over across provider sandboxes
+   * (Adyen/Stripe decline the gateway's "decline" cards but Checkout.com
+   * approves any Luhn-valid card), while an expired card declines everywhere. */
+  expirationYear?: number;
   expectedOutcome: string;
 }
 
@@ -106,7 +111,8 @@ const SEED_CUSTOMERS: SeedCustomer[] = [
     lastName: "Oliveira",
     email: "ana.oliveira@example.com",
     cpf: "16899535009",
-    cardNumber: "4507990000000028", // DECLINED_BY_BANK test card (intentional)
+    cardNumber: "4507990000000002",
+    expirationYear: 20, // expired on purpose — deterministic decline (see type doc)
     expectedOutcome: "DECLINED (intentional — non-refundable demo example)",
   },
 ];
@@ -200,7 +206,7 @@ async function seedOne(seed: SeedCustomer): Promise<SeedResult> {
               card_data: {
                 number: seed.cardNumber,
                 expiration_month: 11,
-                expiration_year: 28,
+                expiration_year: seed.expirationYear ?? 28,
                 security_code: "123",
                 holder_name: asciiUpper(fullName),
               },
@@ -265,9 +271,9 @@ async function main(): Promise<void> {
   console.log("\nSeed summary:");
   console.table(results);
   console.log(
-    "Note: Ana Oliveira uses the DECLINED_BY_BANK test card on purpose so the",
+    "Note: Ana Oliveira uses an expired card (11/20) on purpose so the",
   );
-  console.log("demo includes a non-refundable payment.");
+  console.log("demo includes a non-refundable DECLINED payment.");
 }
 
 main().catch((error) => {

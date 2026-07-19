@@ -39,7 +39,7 @@ flowchart LR
     MCP["mcp.prod.y.uno<br/>remote MCP server"]
   end
 
-  ANTH["Anthropic API<br/>(claude-sonnet-5)"]
+  ANTH["LLM provider<br/>OpenRouter (preferred) or<br/>direct Anthropic (claude-sonnet-5)"]
 
   SDK -->|"session, then OTT"| SESS
   SDK --> PAY
@@ -186,6 +186,12 @@ execution.
   encodes the operating rules: resolve names via local tools first, re-verify payment
   state with Yuno before acting, never invent IDs, re-retrieve after money moves,
   stop on errors, never argue past a denial.
+- **Provider portability.** Model selection is resolved per request in
+  `lib/agent/model.ts`: OpenRouter when `OPENROUTER_API_KEY` is set (default
+  `anthropic/claude-sonnet-5`), direct Anthropic as fallback. The permissions
+  policy, confirmation gate, and toolkit are provider-agnostic — swapping the
+  model vendor for this financial infrastructure platform demo is an env-var
+  change, not a code change.
 - **Per-request toolkit lifecycle.** `POST /api/chat` builds the toolkit (which opens
   an MCP session), and closes it on finish, abort, and error. Fresh session per
   request keeps the remote MCP's IP-binding harmless in practice, and
@@ -210,7 +216,9 @@ npm run dev                        # http://localhost:3000
 | `NEXT_PUBLIC_YUNO_PUBLIC_API_KEY` | Same value — exposed to the browser for the Web SDK |
 | `YUNO_PRIVATE_SECRET_KEY` | Private secret key. Server-only, never logged, never sent to the client |
 | `YUNO_WEBHOOK_SECRET` | HMAC secret for webhook signature verification |
-| `ANTHROPIC_API_KEY` | For the `/ops` agent (Claude via AI SDK) |
+| `OPENROUTER_API_KEY` | Preferred — routes the `/ops` agent through OpenRouter (default model `anthropic/claude-sonnet-5`) |
+| `ANTHROPIC_API_KEY` | Fallback — direct Anthropic for the `/ops` agent, used only when `OPENROUTER_API_KEY` is unset |
+| `AGENT_MODEL` | Optional model override for the `/ops` agent (OpenRouter or Anthropic id, depending on active provider) |
 | `YUNO_API_URL` | Defaults to `https://api-sandbox.y.uno` — keep it pointed at sandbox |
 
 Keys come from the Yuno dashboard → **Developers → API keys**, **sandbox**

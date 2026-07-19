@@ -1,6 +1,15 @@
-# CONTEXT.md — Phase 0 recon findings (2026-07-18)
+# CONTEXT.md — Phase 0 recon findings (2026-07-18) + live-pass results (2026-07-19)
 
-Findings from Yuno docs recon (llms.txt-indexed pages) + npm registry. Items marked ⏳ are blocked on credentials (.env.local not yet filled) and must be verified against the live sandbox before Phase 1 sign-off.
+Findings from Yuno docs recon (llms.txt-indexed pages) + npm registry. Items marked ⏳ are unverified; ✅ marks what the 2026-07-19 live sandbox pass confirmed.
+
+## Live-pass results (2026-07-19, credentials in .env.local)
+
+- ✅ Customer + checkout session creation works with `customer_id` (UUID from POST /v1/customers) — the docs discrepancy is resolved in favor of the reference schema.
+- ✅ Enabled methods on this account: CARD, iDEAL, Klarna, 7Eleven, Apple Pay, Clearpay, Google Pay. **No PIX** → cards-only demo.
+- ✅ Seed script: DIRECT payments work; Maria/João SUCCEEDED, Ana DECLINED.
+- ⚠️ **Routing discovery: testing-gateway "decline" cards do NOT decline here.** The account routes to real provider sandboxes with failover — observed ADYEN:Refused → STRIPE:card_declined → CHECKOUT:Authorized on card `...0028`, and NMI in the mix. Checkout.com's sandbox approves any Luhn-valid card at any amount we tried (incl. cent-ending triggers). **Deterministic decline recipe: expired expiry `11/20`** — refused by every provider (seed uses it for Ana).
+- ✅ Agent verified live end-to-end via OpenRouter (`x-agent-model: openrouter/anthropic/claude-sonnet-5`): local `searchOrders` → MCP `paymentRetrieve` (remote MCP auth + IP binding fine from this machine) → `paymentCancelOrRefund` halted at `tool-approval-request` with no execution. ai@7 tool round-trip with the toolkit works.
+- Still ⏳: browser SDK checkout round-trip (form mount → OTT → result page), webhook delivery from Yuno (needs public URL + dashboard config), post-refund status string, 3DS card numbers, vaulted-token/subscription path.
 
 ## API fundamentals
 
@@ -53,6 +62,7 @@ Expiry `11/28`, CVV `123`, holder `John Doe`:
 - **CORRECTION (found in installed package source, Phase 3): the toolkit IS an MCP client wrapper** — `createYunoAgentToolkit` connects to `mcp.prod.y.uno` at creation, lists tools, and every tool call is a remote MCP call. So IP-binding + 15 req/min apply to our agent too. Implications: (a) we create+close the toolkit per chat request (fresh session each time → IP binding is per-session, less fragile than feared, but a stable-egress deploy host still preferred); (b) demo pacing should stay under ~15 tool calls/min; (c) `context: {sandbox: true}` is passed (sends `x-sandbox: true`). ⏳ live connectivity test still pending creds.
 - Confirmation gate: implemented with AI SDK v7 native `toolApproval` (server-enforced: core only runs `execute` after an `approved: true` response round-trips; denial → `output-denied` part). Destructive list + fail-closed regex (`refund|cancel|pause|unenroll|delete`) so unknown destructive tools get gated by default.
 - `docs.y.uno/setup-mcp` is a *different* MCP (docs search for IDEs) — don't confuse.
+- Provider swap (2026-07): ops-agent model now resolved per request in `lib/agent/model.ts` — OpenRouter via `@openrouter/ai-sdk-provider@3.0.0` when `OPENROUTER_API_KEY` set (default `anthropic/claude-sonnet-5`, verified newest Sonnet on the public OpenRouter model list), direct `@ai-sdk/anthropic` (`claude-sonnet-5`) as fallback; `AGENT_MODEL` overrides either.
 
 ## Deploy decision
 

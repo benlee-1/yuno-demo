@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { anthropic } from "@ai-sdk/anthropic";
 import {
   convertToModelMessages,
   stepCountIs,
@@ -8,6 +7,7 @@ import {
   type UIMessage,
 } from "ai";
 import { localTools } from "@/lib/agent/local-tools";
+import { resolveModel } from "@/lib/agent/model";
 import { buildToolApproval } from "@/lib/agent/permissions";
 import { AgentConfigError, buildYunoToolkit } from "@/lib/agent/toolkit";
 
@@ -49,11 +49,14 @@ export async function POST(req: Request) {
   };
 
   try {
+    const { model, providerLabel, modelId } = resolveModel();
     toolkit = await buildYunoToolkit();
     const tools = { ...toolkit.getTools(), ...localTools };
+    // Which provider+model serves this request (never log keys).
+    console.log(`[ops-agent] model: ${providerLabel}/${modelId}`);
 
     const result = streamText({
-      model: anthropic("claude-sonnet-5"),
+      model,
       system: loadSystemPrompt(),
       messages: await convertToModelMessages(messages, {
         tools,
@@ -73,7 +76,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      headers: { "x-agent-model": `${providerLabel}/${modelId}` },
+    });
   } catch (error) {
     await closeToolkit();
     if (error instanceof AgentConfigError) {

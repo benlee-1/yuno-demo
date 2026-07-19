@@ -17,12 +17,15 @@ export class AgentConfigError extends Error {
 /** Throws AgentConfigError listing every missing env var (lazy, request-time). */
 export function assertAgentEnv(): void {
   const required = [
-    "ANTHROPIC_API_KEY",
     "YUNO_ACCOUNT_CODE",
     "YUNO_PUBLIC_API_KEY",
     "YUNO_PRIVATE_SECRET_KEY",
   ];
   const missing = required.filter((name) => !process.env[name]);
+  // LLM provider: OpenRouter preferred, direct Anthropic as fallback.
+  if (!process.env.OPENROUTER_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    missing.push("OPENROUTER_API_KEY (recommended) or ANTHROPIC_API_KEY");
+  }
   if (missing.length > 0) throw new AgentConfigError(missing);
 }
 

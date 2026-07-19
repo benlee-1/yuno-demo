@@ -7,19 +7,9 @@ generates **sandbox** transactions via Yuno's Seamless Web SDK, plus a
 least-privilege payment-ops agent (`/ops`). Built for a live onboarding
 presentation. Sandbox only — no real cards, ever.
 
-## Stack
-
-- Next.js 16 (App Router, root `app/` dir, `@/*` import alias), TypeScript, Tailwind CSS v4
-- `@yuno-payments/sdk-web@7.11.0` (client) + Yuno REST API via `lib/yuno.ts` (server)
-- `better-sqlite3` local store in `data/demo.db` via `lib/db.ts`
-- `ai` v7 + `@ai-sdk/anthropic` + `@yuno-payments/agent-toolkit@0.1.2` (Ops Agent, wired)
-
 ## Commands
 
-- `npm run dev` — dev server (http://localhost:3000)
 - `npm run build` — production build (must pass with no `.env.local` present)
-- `npm run lint` — ESLint
-- `npx tsc --noEmit` — typecheck
 - `npm run seed` — create 3 named sandbox orders (Maria/João SUCCEEDED, Ana
   DECLINED on purpose) so the agent has data; needs Yuno creds in `.env.local`
 
@@ -82,24 +72,6 @@ presentation. Sandbox only — no real cards, ever.
   the remote limits apply to us: sessions IP-bound, ~15 req/min, 30-min idle cap.
   Hence per-request create+close, `stopWhen: stepCountIs(10)`, and demo pacing.
 
-## Env vars (see `.env.local.example`)
+## Env vars
 
-- `YUNO_ACCOUNT_CODE` — account id used in checkout sessions/payments
-- `YUNO_PUBLIC_API_KEY` / `NEXT_PUBLIC_YUNO_PUBLIC_API_KEY` — same value; the
-  `NEXT_PUBLIC_` one is required client-side by the Web SDK
-- `YUNO_PRIVATE_SECRET_KEY` — server-only, never logged
-- `YUNO_WEBHOOK_SECRET` — webhook HMAC verification
-- `ANTHROPIC_API_KEY` — Ops Agent
-- `YUNO_API_URL` — defaults to `https://api-sandbox.y.uno`
-
-## Layout
-
-- `app/page.tsx` storefront → `app/checkout/page.tsx` (Yuno SDK mount) →
-  `app/checkout/result/page.tsx`
-- API: `app/api/checkout/session` (customer + session + order row),
-  `app/api/payments` (create payment with idempotency key),
-  `app/api/webhooks/yuno` (HMAC-verified receiver), `app/api/events` (event
-  feed, `?since=` polling), `app/api/chat` (Ops Agent stream)
-- `app/events` — live webhook log (3s poll); `app/ops` — agent chat with
-  approval cards + scopes sidebar
-- `scripts/seed.ts` — sandbox seed data (DIRECT-workflow test-card payments)
+See `.env.local.example` for the full annotated list.

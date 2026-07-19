@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.16",
     "@ai-sdk/react": "^4.0.34",
+    "@openrouter/ai-sdk-provider": "^3.0.0",
     "@yuno-payments/agent-toolkit": "^0.1.2",
     "@yuno-payments/sdk-web": "^7.11.0",
     "ai": "^7.0.31",

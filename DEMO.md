@@ -9,19 +9,24 @@ this file with what you actually see.
 ## Test data (memorize or keep on a card)
 
 - Success card: `4507 9900 0000 0002` — expiry `11/28`, CVV `123`, holder `John Doe`
-- Decline card: `4507 9900 0000 0028` (DECLINED_BY_BANK) — same expiry/CVV/holder
+- Decline recipe: **same card number with expiry `11/20` (expired)** — verified live.
+  The testing-gateway "decline" cards do NOT decline on this account: routing fails
+  over across real provider sandboxes (Adyen/Stripe refuse, then Checkout.com
+  approves any Luhn-valid card — itself a nice failover story to narrate). An
+  expired card declines at every provider, so it is the deterministic path.
 - Seeded customers (from `npm run seed`): **Maria Silva** (SUCCEEDED, refundable),
   **João Santos** (SUCCEEDED), **Ana Oliveira** (DECLINED on purpose — non-refundable)
 - Live-buy customer name for the demo: **Carlos Mendes**
 
 ## Pre-demo checklist (T-10 minutes)
 
-- [ ] `.env.local` filled: all Yuno sandbox keys + `ANTHROPIC_API_KEY` +
+- [ ] `.env.local` filled: all Yuno sandbox keys + `OPENROUTER_API_KEY` (or
+      `ANTHROPIC_API_KEY`) +
       `YUNO_WEBHOOK_SECRET`. `npm run dev` running, http://localhost:3000 loads.
 - [ ] `npm run seed` — the summary table must show Maria Silva **SUCCEEDED**,
       João Santos **SUCCEEDED**, Ana Oliveira **DECLINED** (any `API_ERROR_*` row
       means creds or sandbox trouble — fix before going on). Re-running adds new
-      rows; that's fine, the agent uses the newest. ⏳
+      rows; that's fine, the agent uses the newest. ✅ verified live 2026-07-19.
 - [ ] Webhook URL configured in the Yuno dashboard (Developers → Webhooks →
       `<origin>/api/webhooks/yuno`, HMAC enabled, secret matches
       `YUNO_WEBHOOK_SECRET`). If presenting from localhost:
@@ -31,7 +36,10 @@ this file with what you actually see.
 - [ ] `/events` is in a known state (empty, or you know which rows are pre-show).
 - [ ] Agent smoke test: open `/ops`, send **"Show recent orders"** — must return the
       seeded orders as a table within a few seconds. This also proves the remote MCP
-      connection works from this network. ⏳ first live MCP connectivity test.
+      connection works from this network. ✅ verified live 2026-07-19 (OpenRouter
+      Claude Sonnet 5; full refund chain incl. MCP `paymentRetrieve` and the
+      approval-gate halt on `paymentCancelOrRefund` — re-verify from the venue's
+      network, since MCP sessions are IP-bound).
 - [ ] Backup screencast ready and tested: `<PATH-TO-SCREENCAST.mp4 — record during
       first successful rehearsal>`.
 - [ ] Have `lib/agent/permissions.ts` open in an editor tab — you'll show it during
@@ -49,9 +57,12 @@ loop unverified live.
 appear within moments (page polls every 3s). Point at `signature_valid = 1`: HMAC
 verified over the raw body, timing-safe compare, deduped on idempotency key. ⏳
 
-**1:30 — A decline.** Quick second buy with decline card `4507 9900 0000 0028` →
-different result state. One sentence: same loop, sandbox gateway simulates
-DECLINED_BY_BANK. ⏳ exact result-page status text unverified.
+**1:30 — A decline.** Quick second buy with the success card number but expiry
+`11/20` (expired) → different result state. Narrate the routing story: Yuno
+fails over across providers (we watched Adyen and Stripe refuse before
+Checkout.com approved a "decline" test card — an expired card is refused by
+all, hence this recipe). ⏳ exact result-page status text unverified via the
+browser SDK flow (DIRECT-workflow declines verified live).
 
 **2:00 — The star: the ops agent.** Open `/ops`. Frame it in one line: *"This is the
 Payments Concierge pattern — an agent that acts autonomously, but only within
@@ -117,7 +128,7 @@ Refund Ana's order
 | Webhook doesn't arrive on stage | `/events` still shows the seeded/pre-show state; say retries cover you (Yuno retries 7× with backoff) and move on — check again at the 4:40 beat. |
 | Tunnel URL rotated (cloudflared restarted) | Re-paste the new URL in dashboard → Developers → Webhooks. This is why the checklist says tunnel first, dashboard second. |
 | 3DS as an optional extra | Only if asked. 3DS uses a **separate card set** — numbers live in the Yuno "3DS configuration and testing" doc; challenge OTPs are `1234`/`1111`/`2222`/`3333`/`4444`. ⏳ pull exact card numbers after the first live run and record them here: `<3DS-CARDS-TBD>`. |
-| PIX not enabled on the account | Cards-only narrative line: "Same loop handles PIX — `sdk_action_required` → `continuePayment` renders the QR — this account is card-only today." ⏳ |
+| PIX not enabled on the account | Cards-only narrative line: "Same loop handles PIX — `sdk_action_required` → `continuePayment` renders the QR — this account is card-only today." ✅ confirmed 2026-07-19: enabled methods are CARD, iDEAL, Klarna, 7Eleven, Apple Pay, Clearpay, Google Pay — no PIX. |
 
 ## Rehearsal priorities (things never yet run live)
 
