@@ -238,14 +238,19 @@ lazily at request time, and missing creds surface as clean 500 JSON errors.
 
 ### Sandbox test data
 
-Yuno Testing Gateway cards — expiry `11/28`, CVV `123`, holder `John Doe`:
+Card `4507 9900 0000 0002`, expiry `11/28`, CVV `123`, holder `John Doe`. The
+BR checkout form also requires a document type + CPF — use `529.982.247-25`.
 
-| Card | Outcome |
-|---|---|
-| `4507 9900 0000 0002` | SUCCEEDED |
-| `4507 9900 0000 0010` | INSUFFICIENT_FUNDS |
-| `4507 9900 0000 0028` | DECLINED_BY_BANK |
-| `4507 9900 0000 0036` | DO_NOT_HONOR |
+**Declines are not reproducible on this account** (verified live 2026-07-19).
+Yuno's Testing Gateway publishes decline cards (`…0010` INSUFFICIENT_FUNDS,
+`…0028` DECLINED_BY_BANK, `…0036` DO_NOT_HONOR), but this account routes to
+live provider sandboxes with failover: we observed Adyen refuse → Stripe
+refuse → Checkout.com approve the same "declined" card, and Checkout.com's
+sandbox approves any Luhn-valid, unexpired card. An expired expiry (`11/20`)
+is refused by every provider, so it is the only deterministic decline — and
+only via the API, since the Web SDK validates expiry client-side and blocks
+submission. Hence `scripts/seed.ts` uses an expired card for its declined
+example, and the demo narrates declines rather than clicking one.
 
 `npm run seed` creates Maria Silva and João Santos (succeeded payments, refundable)
 and Ana Oliveira (declined on purpose — the agent's "should refuse to refund this"

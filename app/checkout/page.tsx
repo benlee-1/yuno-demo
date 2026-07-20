@@ -179,25 +179,32 @@ function CheckoutInner() {
             onClick={() => setShowTestCards((v) => !v)}
             className="w-full flex items-center justify-between text-sm font-display uppercase tracking-wide text-primary cursor-pointer"
           >
-            <span>Sandbox test cards</span>
+            <span>Sandbox test card</span>
             <span aria-hidden>{showTestCards ? "−" : "+"}</span>
           </button>
           {showTestCards && (
             <div className="mt-3 flex flex-col gap-2 text-xs text-ink/80">
               <div className="flex items-center justify-between gap-2">
-                <Badge tone="success">Success</Badge>
+                <Badge tone="success">Card</Badge>
                 <code className="font-mono">4507 9900 0000 0002</code>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <Badge tone="pending">No funds</Badge>
-                <code className="font-mono">4507 9900 0000 0010</code>
+                <span className="text-neutral-400">Expiry · CVV</span>
+                <code className="font-mono">11/28 · 123</code>
               </div>
               <div className="flex items-center justify-between gap-2">
-                <Badge tone="error">Declined</Badge>
-                <code className="font-mono">4507 9900 0000 0028</code>
+                <span className="text-neutral-400">CPF (required)</span>
+                <code className="font-mono">529.982.247-25</code>
               </div>
-              <p className="mt-1 text-neutral-400">
-                Expiry 11/28 · CVV 123 · Holder: John Doe
+              <p className="mt-2 pt-2 border-t border-white/60 text-neutral-400 leading-relaxed">
+                Only the approval path is demoable here: this account routes
+                across live provider sandboxes with failover, so the gateway&apos;s
+                &ldquo;decline&rdquo; cards get approved by whichever provider
+                accepts them. See Ana Oliveira&apos;s order on{" "}
+                <Link href="/ops" className="text-primary font-semibold">
+                  the ops agent
+                </Link>{" "}
+                for a declined payment.
               </p>
             </div>
           )}

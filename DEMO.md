@@ -9,11 +9,12 @@ this file with what you actually see.
 ## Test data (memorize or keep on a card)
 
 - Success card: `4507 9900 0000 0002` — expiry `11/28`, CVV `123`, holder `John Doe`
-- Decline recipe: **same card number with expiry `11/20` (expired)** — verified live.
-  The testing-gateway "decline" cards do NOT decline on this account: routing fails
-  over across real provider sandboxes (Adyen/Stripe refuse, then Checkout.com
-  approves any Luhn-valid card — itself a nice failover story to narrate). An
-  expired card declines at every provider, so it is the deterministic path.
+- **Do not attempt a live decline — there is no working recipe in the browser.**
+  The testing-gateway "decline" cards get APPROVED on this account (routing fails
+  over: Adyen refuses → Stripe refuses → Checkout.com approves any Luhn-valid card
+  — narrate that, it's the better story). The one deterministic decline is an
+  expired expiry `11/20`, but it works only via the API (that's what `npm run seed`
+  uses for Ana); the Web SDK validates expiry client-side and blocks submission.
 - Seeded customers (from `npm run seed`): **Maria Silva** (SUCCEEDED, refundable),
   **João Santos** (SUCCEEDED), **Ana Oliveira** (DECLINED on purpose — non-refundable)
 - Live-buy customer name for the demo: **Carlos Mendes**
