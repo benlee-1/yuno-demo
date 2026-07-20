@@ -99,8 +99,10 @@ async function lastAssistantProse(page: Page): Promise<string> {
 
 /**
  * Send the refund prompt and drive the chat to the confirmation card,
- * answering at most one clarifying question (e.g. duplicate orders) with the
- * exact merchant_order_id on the way.
+ * answering at most two intermediate turns on the way. Observed live: the
+ * agent may ask a clarifying question (duplicate orders) or — despite the
+ * system prompt telling it not to — ask for a go-ahead in prose instead of
+ * calling the gated tool (seen 2026-07-20). One reply covers both cases.
  */
 async function reachRefundApproval(page: Page, prompt: string, order: SeedRow) {
   await page.goto("/ops");
@@ -111,12 +113,12 @@ async function reachRefundApproval(page: Page, prompt: string, order: SeedRow) {
   });
 
   let outcome = await waitTurnEnd(page);
-  if (outcome === "idle") {
+  for (let turn = 0; outcome === "idle" && turn < 2; turn++) {
     const question = await lastAssistantProse(page);
-    console.log(`[ops-agent] clarifying question:\n${question}`);
+    console.log(`[ops-agent] intermediate turn:\n${question}`);
     await say(
       page,
-      `The newest one: order ${order.merchant_order_id} (payment ${order.payment_id}).`,
+      `Yes — proceed with the full refund of order ${order.merchant_order_id} (payment ${order.payment_id}).`,
     );
     outcome = await waitTurnEnd(page);
   }

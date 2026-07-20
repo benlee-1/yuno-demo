@@ -42,6 +42,22 @@ function getDb(): Database.Database {
       raw TEXT,
       received_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS agent_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      run_id TEXT,
+      step_number INTEGER,
+      part_type TEXT,
+      tool_name TEXT,
+      tool_call_id TEXT,
+      gated INTEGER,
+      approved INTEGER,
+      payload TEXT,
+      model TEXT,
+      finish_reason TEXT,
+      input_tokens INTEGER,
+      output_tokens INTEGER,
+      created_at TEXT
+    );
   `);
   // Migration-safe additive column (Phase 2): older DBs may predate it.
   const eventCols = db
@@ -206,6 +222,63 @@ export function insertEvent(event: {
       ...event,
       received_at: new Date().toISOString(),
     });
+}
+
+export interface AgentAuditRow {
+  id: number;
+  /** One UUID per /api/chat request — groups the steps of a single agent run. */
+  run_id: string;
+  step_number: number | null;
+  /** user-message | assistant-text | tool-call | tool-result | tool-error | approval-request | approval-response */
+  part_type: string;
+  tool_name: string | null;
+  tool_call_id: string | null;
+  /** 1 = tool is on the confirmation gate (isDestructiveTool). */
+  gated: number | null;
+  /** approval-response only: 1 = Confirm, 0 = Deny. */
+  approved: number | null;
+  payload: string | null;
+  model: string | null;
+  finish_reason: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  created_at: string;
+}
+
+export type AgentAuditInsert = Omit<AgentAuditRow, "id" | "created_at">;
+
+export function insertAgentAudit(rows: AgentAuditInsert[]): void {
+  if (rows.length === 0) return;
+  const stmt = getDb().prepare(
+    `INSERT INTO agent_audit
+      (run_id, step_number, part_type, tool_name, tool_call_id, gated, approved, payload, model, finish_reason, input_tokens, output_tokens, created_at)
+     VALUES (@run_id, @step_number, @part_type, @tool_name, @tool_call_id, @gated, @approved, @payload, @model, @finish_reason, @input_tokens, @output_tokens, @created_at)`,
+  );
+  const created_at = new Date().toISOString();
+  const insertAll = getDb().transaction((batch: AgentAuditInsert[]) => {
+    for (const row of batch) stmt.run({ ...row, created_at });
+  });
+  insertAll(rows);
+}
+
+/** Dedupe check: the full chat history is resent on every request. */
+export function hasAgentAuditRow(
+  part_type: string,
+  tool_call_id: string,
+): boolean {
+  return (
+    getDb()
+      .prepare(
+        `SELECT 1 FROM agent_audit WHERE part_type = ? AND tool_call_id = ? LIMIT 1`,
+      )
+      .get(part_type, tool_call_id) !== undefined
+  );
+}
+
+export function listAgentAudit(limit = 200): AgentAuditRow[] {
+  return getDb()
+    .prepare(`SELECT * FROM agent_audit ORDER BY id DESC LIMIT ?`)
+    .all(limit) as AgentAuditRow[];
 }
 
 export function listEvents(limit = 100): EventRow[] {

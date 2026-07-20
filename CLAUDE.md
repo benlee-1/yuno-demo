@@ -72,6 +72,10 @@ presentation. Sandbox only — no real cards, ever.
 - `lib/agent/local-tools.ts` — read-only SQLite tools (`searchOrders`,
   `listRecentOrders`, `paymentsBriefing`); the name→Yuno-ID mapping lives
   here, not in Yuno.
+- `lib/agent/audit.ts` — persistent audit trail: every run's prompt, tool
+  calls/results (with gated flag), Confirm/Deny decisions, and per-step token
+  usage into the `agent_audit` table via `onStepEnd` (NOT the deprecated
+  `onStepFinish` alias). Best-effort — an audit failure never breaks the stream.
 - `lib/agent/system-prompt.md` — versioned system prompt, read per request.
 - **The agent toolkit IS an MCP client** — `createYunoAgentToolkit()` connects to
   the remote MCP at `mcp.prod.y.uno`; every tool call is a remote MCP call, so

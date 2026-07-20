@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -6,6 +7,11 @@ import {
   streamText,
   type UIMessage,
 } from "ai";
+import {
+  auditRequest,
+  auditStep,
+  auditToolExecution,
+} from "@/lib/agent/audit";
 import { localTools } from "@/lib/agent/local-tools";
 import { resolveModel } from "@/lib/agent/model";
 import { buildToolApproval } from "@/lib/agent/permissions";
@@ -55,6 +61,10 @@ export async function POST(req: Request) {
     // Which provider+model serves this request (never log keys).
     console.log(`[ops-agent] model: ${providerLabel}/${modelId}`);
 
+    // Persistent audit trail (agent_audit): one run id per request.
+    const runId = randomUUID();
+    auditRequest(runId, messages);
+
     const result = streamText({
       model,
       system: loadSystemPrompt(),
@@ -68,6 +78,8 @@ export async function POST(req: Request) {
       // approval response (Confirm button in /ops).
       toolApproval: buildToolApproval(Object.keys(toolkit.getTools())),
       stopWhen: stepCountIs(10),
+      onStepEnd: (step) => auditStep(runId, `${providerLabel}/${modelId}`, step),
+      onToolExecutionEnd: (event) => auditToolExecution(runId, event),
       onFinish: closeToolkit,
       onAbort: closeToolkit,
       onError: async ({ error }) => {

@@ -114,12 +114,15 @@ the agent won't invent required fields.)
 briefing tool aggregates today's records from SQLite: count, approved vs declined,
 decline reasons, total volume. Narrate: a scheduled-briefing-style answer computed
 entirely from the merchant's own records — zero extra Yuno API calls, zero MCP
-budget. ⏳
+budget. ✅ verified live 2026-07-20 (localhost against live sandbox; clean
+count/split/volume table in the reply).
 
 **4:20 — Judgment, not just obedience.** Send: **"Refund Ana's order"** → the agent
 retrieves the payment, sees it's DECLINED, and explains it never succeeded so there
 is nothing to refund — no gate even triggered, because it verified state before
-acting. ⏳
+acting. ✅ verified live 2026-07-20: agent cited `captured: 0 / refunded: 0` and
+every provider's refusal, then refused — no approval card
+(`e2e/ops-judgment.spec.ts` pins this).
 
 **4:40 — Close the loop.** Back to `/events`: the `payment.refund` row from Maria's
 refund has arrived. Close on the architecture one-liner: *"One Next.js app, one
@@ -144,10 +147,29 @@ Refund Ana's order
 | Sandbox down / API errors mid-demo | Switch to the backup screencast (path in checklist). Narrate over it — the talk track is identical. |
 | Remote MCP rate limit (~15 req/min, sessions also 30-min idle-capped) | The refund flow alone is ~4–5 tool calls. Pace tool-heavy prompts; if the agent starts erroring on tool calls, talk through `permissions.ts` for 60 seconds and retry. Don't ad-lib extra multi-tool prompts. |
 | Approval card never resolves / stream stalls | Refresh `/ops` and re-send — each request opens a fresh MCP session, so state loss is contained to the chat thread. |
+| Agent asks "please confirm" in prose instead of showing the approval card (observed 2026-07-20; system prompt now steers against it) | Reply **"Yes — proceed with the full refund."** — the agent then calls the tool and the card appears (the server-side gate always fires). Narrate it as double-checking; costs ~15 seconds. |
 | Webhook doesn't arrive on stage | `/events` still shows the seeded/pre-show state; say retries cover you (Yuno retries 7× with backoff) and move on — check again at the 4:40 beat. |
 | Tunnel URL rotated (cloudflared restarted) | Re-paste the new URL in dashboard → Developers → Webhooks. This is why the checklist says tunnel first, dashboard second. |
 | Asked about 3DS | Not demoable on this account (no 3DS credentials configured — probed live 2026-07-19: Yuno's 3DS cards, e.g. `4234123412340003`, decline via NMI on DIRECT and are rejected client-side by the SDK). Q&A answer: the `sdk_action_required` → `continuePayment()` branch in `app/checkout/page.tsx` is exactly where a challenge would render; Yuno's 3DS test set uses OTPs `1234` (auth) / `1111` (fail) / `2222` (reject); enabling it is dashboard config (3DS credentials or a provider like Cybersource), no code change. |
 | PIX not enabled on the account | Cards-only narrative line: "Same loop handles PIX — `sdk_action_required` → `continuePayment` renders the QR — this account is card-only today." ✅ confirmed 2026-07-19: enabled methods are CARD, iDEAL, Klarna, 7Eleven, Apple Pay, Clearpay, Google Pay — no PIX. |
+
+## Q&A ammo (all verified live 2026-07-20, e2e-pinned)
+
+- **"What if you ask it to charge a card?"** — Verified: "Charge Carlos Mendes
+  R$ 50 on his saved card" → the agent searches local records, explains it has no
+  charge action (payments.create is not in the allowlist — the tool doesn't exist
+  for the model) and offers a payment link instead. No gate, no hallucinated call.
+  (`e2e/ops-judgment.spec.ts`)
+- **"What if you refund the same order twice?"** — Verified: after Maria's refund,
+  the same prompt again → the agent re-retrieves from Yuno, sees
+  `status: REFUNDED`, and refuses without opening the gate. Bonus: local DB still
+  says SUCCEEDED (webhooks land on the deployed host), so this also proves the
+  agent trusts Yuno over stale local state. (`e2e/ops-refund-twice.spec.ts`)
+- **"Where's the audit trail?"** — Every run is persisted server-side to the
+  `agent_audit` table (SQLite): prompt, each tool call/result with gated flag,
+  each Confirm/Deny decision, assistant text, per-step token usage. Show live:
+  `sqlite3 data/demo.db "SELECT part_type, tool_name, gated, approved FROM agent_audit ORDER BY id DESC LIMIT 15;"`
+  (on Railway via `railway ssh --service web`).
 
 ## Rehearsal priorities (things never yet run live)
 

@@ -181,6 +181,14 @@ execution.
   name, collapsible input/result JSON, state (running / done / error / denied), and a
   "gated" marker — plus a sidebar listing the full enabled-scope allowlist. The
   audience watches the agent work; nothing happens off-screen.
+- **Every run is audited server-side.** The chat transcript lives only in browser
+  state, so `lib/agent/audit.ts` persists an audit trail to SQLite
+  (`agent_audit`): the operator's prompt, every tool call/result/error with its
+  gated flag, every approval request and Confirm/Deny decision, the assistant's
+  text, and per-step token usage — grouped by a per-request `run_id`. A refund
+  survives a page refresh in the record, like any production credential's usage
+  should. Inspect with
+  `sqlite3 data/demo.db "SELECT * FROM agent_audit ORDER BY id DESC LIMIT 20;"`.
 - **The system prompt is a versioned file**, `lib/agent/system-prompt.md`, loaded per
   request — prompt changes are reviewable diffs, not string edits buried in code. It
   encodes the operating rules: resolve names via local tools first, re-verify payment
@@ -263,7 +271,7 @@ example).
 - `lib/agent/` — the ops agent: `permissions.ts` (permissions policy: allowlist +
   approval gate), `toolkit.ts` (per-request MCP toolkit lifecycle),
   `local-tools.ts` (read-only DB tools incl. the payments briefing),
-  `system-prompt.md`
+  `audit.ts` (persistent `agent_audit` trail in SQLite), `system-prompt.md`
 - `app/api/` — `checkout/session`, `payments`, `webhooks/yuno`, `events`, `chat`
 - `app/` — storefront, `/checkout`, `/checkout/result`, `/events`, `/ops`
 - `scripts/seed.ts` — sandbox seed data
