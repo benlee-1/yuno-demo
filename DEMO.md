@@ -29,11 +29,16 @@ this file with what you actually see.
       delivery unless you re-point the dashboard at a cloudflared tunnel).
 - [ ] **Wipe, then seed — duplicates break the agent flow.** Stale rows from
       earlier seeds make the agent ask "which Maria?" instead of acting
-      (observed in testing). On the demo host run:
-      `sqlite3 data/demo.db "DELETE FROM orders;" && npm run seed`
-      (on Railway: via `railway ssh --service web`). Summary table must show
-      Maria Silva **SUCCEEDED**, João Santos **SUCCEEDED**, Ana Oliveira
-      **DECLINED**. ✅ verified live 2026-07-19.
+      (observed in testing). ⚠️ On Railway, two traps (hit 2026-07-20): the
+      container has **no `sqlite3` binary**, and `railway ssh --service web -- <cmd>`
+      **strips quoting** (args are re-joined remotely — the wipe silently
+      doesn't run and the seed duplicates). Pipe commands via **stdin**
+      instead, using node + better-sqlite3:
+      `printf 'node -e "require(%s)(%s).prepare(%s).run()"\nnpm run seed\nexit\n' "'better-sqlite3'" "'data/demo.db'" "'DELETE FROM orders'" | railway ssh --service web`
+      (locally the plain `sqlite3 data/demo.db "DELETE FROM orders;" && npm run seed`
+      still works). Then verify **exactly 3 rows**: Maria Silva **SUCCEEDED**,
+      João Santos **SUCCEEDED**, Ana Oliveira **DECLINED**. ✅ verified live
+      2026-07-20 on the Railway host.
 - [ ] Webhook config in the Yuno dashboard (Developers → Webhooks): DONE
       2026-07-19 — URL `https://web-production-05db4.up.railway.app/api/webhooks/yuno`,
       x-api-key/x-secret + HMAC all set and verified end-to-end (events arrive
