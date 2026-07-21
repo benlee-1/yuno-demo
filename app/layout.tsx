@@ -17,7 +17,7 @@ const archivoBlack = Archivo_Black({
 });
 
 export const metadata: Metadata = {
-  title: "Montmare Store — Yuno Sandbox Demo",
+  title: "10X Coffee — Yuno Sandbox Demo",
   description:
     "One-product demo storefront powered by Yuno's financial infrastructure platform (sandbox).",
 };

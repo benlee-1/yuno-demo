@@ -93,7 +93,7 @@ export default async function ResultPage({
             </h1>
             <p className="text-sm text-neutral-400 mb-6">
               {outcome === "success"
-                ? "Your Montmare Reserva is on its way (in sandbox spirit)."
+                ? "Your 10X Blend is on its way (in sandbox spirit)."
                 : outcome === "declined"
                   ? "The transaction was not approved. Try another test card."
                   : "We are waiting for the payment to settle."}

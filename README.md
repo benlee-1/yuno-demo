@@ -1,6 +1,6 @@
-# Montmare Store — Yuno Payments Demo
+# 10X Coffee — Yuno Payments Demo
 
-A one-product storefront ("Montmare Reserva" coffee, R$ 89,00 BRL, Brazil) that runs
+A one-product storefront ("10X Blend" coffee, R$ 89,00 BRL, Brazil) that runs
 real sandbox transactions through [Yuno](https://y.uno), the financial infrastructure
 platform — plus an AI **payment-ops agent** built in the Payments Concierge pattern:
 it takes autonomous payment-ops actions, but only within configured permissions, with

@@ -253,7 +253,7 @@ test.describe("ungated tools", () => {
       console.log(`[ops-agent] payment-link follow-up question:\n${question}`);
       await say(
         page,
-        'CARD only, description "Montmare custom order". BRL / BR is correct — no other options needed.',
+        'CARD only, description "10X Coffee custom order". BRL / BR is correct — no other options needed.',
       );
       outcome = await waitTurnEnd(page);
     }

@@ -72,7 +72,7 @@ function assertCredentials(): void {
 // CPFs are valid-format test values (checksum-correct, not real people).
 // ---------------------------------------------------------------------------
 
-const PRODUCT = "Montmare Reserva 250g";
+const PRODUCT = "10X Blend 250g";
 const AMOUNT = { currency: "BRL", value: 89 };
 
 interface SeedCustomer {
@@ -144,7 +144,7 @@ interface SeedResult {
 
 async function seedOne(seed: SeedCustomer): Promise<SeedResult> {
   const fullName = `${seed.firstName} ${seed.lastName}`;
-  const merchantOrderId = `montmare-${randomAlphanum(6)}`;
+  const merchantOrderId = `10x-${randomAlphanum(6)}`;
   const result: SeedResult = {
     customer: fullName,
     merchant_order_id: merchantOrderId,

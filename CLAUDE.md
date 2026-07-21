@@ -1,8 +1,10 @@
 @AGENTS.md
 
-# Montmare Store — Yuno Payments Demo
+# 10X Coffee — Yuno Payments Demo
 
-One-product demo storefront ("Montmare Reserva" coffee, R$ 89,00 BRL) that
+One-product demo storefront ("10X Blend" coffee, R$ 89,00 BRL, store branded
+"10X Coffee" — dev-productivity humor; Railway project is still named
+`montmare-yuno-demo`) that
 generates **sandbox** transactions via Yuno's Seamless Web SDK, plus a
 least-privilege payment-ops agent (`/ops`). Built for a live onboarding
 presentation. Sandbox only — no real cards, ever.

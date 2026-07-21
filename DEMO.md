@@ -1,6 +1,6 @@
 # DEMO.md — 5-minute presentation runbook
 
-Live demo: Montmare Store on Yuno sandbox + the Payments Concierge-pattern ops
+Live demo: 10X Coffee store on Yuno sandbox + the Payments Concierge-pattern ops
 agent. Everything below is scripted with real inputs; rehearse once end-to-end
 before presenting. Steps marked ⏳ have **not yet been verified against the live
 sandbox** (recon was done without credentials) — rehearse those first and update
@@ -107,7 +107,7 @@ through the visible tool chain as the cards appear:
 
 **3:30 — Agent-initiated checkout.** Send: **"Create a payment link for R$ 150"**.
 ✅ Verified live, with a scripted second turn: the agent first asks for the missing
-required fields — reply **"CARD only, description: Montmare custom order"** — then
+required fields — reply **"CARD only, description: 10X Coffee custom order"** — then
 calls `paymentLinkCreate` and returns
 `https://checkout.sandbox.y.uno/payment?session=<uuid>`. Framing, one sentence: this
 is the agentic-commerce buy-side pattern — an agent initiating a checkout on a

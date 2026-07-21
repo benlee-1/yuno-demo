@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       {
         account_id: getAccountId(),
         merchant_order_id: order.merchant_order_id,
-        description: order.product ?? "Montmare Reserva 250g",
+        description: order.product ?? "10X Blend 250g",
         country: "BR",
         amount: {
           currency: order.currency ?? "BRL",

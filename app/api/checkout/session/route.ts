@@ -10,7 +10,7 @@ import { createOrder } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-const PRODUCT = "Montmare Reserva 250g";
+const PRODUCT = "10X Blend 250g";
 const AMOUNT = { currency: "BRL", value: 89 }; // decimal major units, NOT cents
 const COUNTRY = "BR";
 
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     const [firstName, ...rest] = name.split(/\s+/);
     const lastName = rest.join(" ") || "Demo";
 
-    const merchantOrderId = `montmare-${randomAlphanum(6)}`;
+    const merchantOrderId = `10x-${randomAlphanum(6)}`;
     const accountId = getAccountId();
 
     const customer = await createCustomer({

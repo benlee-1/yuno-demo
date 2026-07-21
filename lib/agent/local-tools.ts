@@ -31,7 +31,7 @@ function bucketOf(status: string | null): StatusBucket {
 }
 
 /**
- * Read-only local tools over the Montmare SQLite order store.
+ * Read-only local tools over the 10X Coffee SQLite order store.
  *
  * The Yuno toolkit only knows Yuno IDs — the mapping from "Maria's coffee
  * order" to a merchant_order_id / payment_id lives here.
@@ -39,13 +39,13 @@ function bucketOf(status: string | null): StatusBucket {
 export const localTools = {
   searchOrders: tool({
     description:
-      "Search Montmare store orders in the local database. Case-insensitive substring match on customer name or merchant_order_id. Use this FIRST to resolve human references like a customer's name to a merchant_order_id and payment_id before calling any Yuno tool.",
+      "Search 10X Coffee store orders in the local database. Case-insensitive substring match on customer name or merchant_order_id. Use this FIRST to resolve human references like a customer's name to a merchant_order_id and payment_id before calling any Yuno tool.",
     inputSchema: z.object({
       query: z
         .string()
         .min(1)
         .describe(
-          "Customer name or merchant_order_id fragment, e.g. 'Maria' or 'montmare-a1b2c3'",
+          "Customer name or merchant_order_id fragment, e.g. 'Maria' or '10x-a1b2c3'",
         ),
     }),
     execute: async ({ query }) => searchOrders(query),
@@ -53,7 +53,7 @@ export const localTools = {
 
   listRecentOrders: tool({
     description:
-      "List the newest Montmare store orders from the local database (customer, product, amount, payment_id, status).",
+      "List the newest 10X Coffee store orders from the local database (customer, product, amount, payment_id, status).",
     inputSchema: z.object({
       limit: z
         .number()
@@ -68,7 +68,7 @@ export const localTools = {
 
   paymentsBriefing: tool({
     description:
-      "Read-only daily payments briefing over the Montmare store's local records: total orders, counts by status bucket (approved/declined/refunded/pending), decline breakdown by stored status, approved and refunded volume in BRL, refund webhook events, and the day's order list (capped at 20). Use when asked to summarize or brief on the day's payments.",
+      "Read-only daily payments briefing over the 10X Coffee store's local records: total orders, counts by status bucket (approved/declined/refunded/pending), decline breakdown by stored status, approved and refunded volume in BRL, refund webhook events, and the day's order list (capped at 20). Use when asked to summarize or brief on the day's payments.",
     inputSchema: z.object({
       date: z
         .string()

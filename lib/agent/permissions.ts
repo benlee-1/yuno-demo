@@ -2,7 +2,7 @@ import type { ActionsConfiguration } from "@yuno-payments/agent-toolkit/ai-sdk";
 import type { ToolApprovalStatus } from "ai";
 
 /**
- * AGENT PERMISSION POLICY — Montmare Payments Concierge
+ * AGENT PERMISSION POLICY — 10X Coffee Payments Concierge
  * =====================================================
  *
  * This module is the single place that defines what the agent MAY do.

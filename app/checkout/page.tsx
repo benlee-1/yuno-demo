@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import type { SdkPaymentsInstance } from "@yuno-payments/sdk-web-types";
 import { GlassCard, Button, Badge } from "@/components/ui";
 
-const PRODUCT = "Montmare Reserva 250g";
+const PRODUCT = "10X Blend 250g";
 
 function CheckoutInner() {
   const searchParams = useSearchParams();

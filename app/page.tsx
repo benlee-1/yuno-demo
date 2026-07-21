@@ -6,11 +6,11 @@ import { GlassCard, Button, Input, Badge } from "@/components/ui";
 import { Marquee } from "@/components/marquee";
 
 const TICKER = [
-  "SINGLE ORIGIN",
+  "SUPERCHARGE YOUR MIND",
   "SANDBOX CERTIFIED",
   "R$ 89",
   "AGENT APPROVED",
-  "TORRA FRESCA",
+  "10X YOUR MORNING",
   "NO REAL CHARGES",
   "DROP 001",
 ];
@@ -43,13 +43,13 @@ export default function StorePage() {
           Limited harvest — Drop 001
         </Badge>
         <h1 className="font-display uppercase leading-[0.88] tracking-tight text-ink text-5xl sm:text-7xl lg:text-[6.5rem]">
-          Montmare <span className="text-primary">Reserva</span>
+          10X <span className="text-primary">Coffee</span>
         </h1>
         <p className="mt-4 font-display uppercase tracking-wide text-ink/80 text-lg sm:text-2xl">
-          Coffee worth refunding<span className="text-primary">*</span>
+          Makes you a 10X developer<span className="text-primary">*</span>
         </p>
         <p className="mt-1 text-xs text-neutral-400 font-medium">
-          *just kidding — but our agent can.
+          *results may vary. Refunds don&apos;t — our agent handles those.
         </p>
       </header>
 
@@ -65,13 +65,13 @@ export default function StorePage() {
                   ☕
                 </span>
                 <div className="text-white font-display uppercase text-xl tracking-tight leading-tight">
-                  Montmare Reserva
+                  10X Blend
                 </div>
                 <div className="text-pale text-xs font-medium tracking-[0.2em] uppercase">
-                  Single Origin · 250g
+                  Dev Fuel · 250g
                 </div>
                 <span className="sticker mt-1 px-3 py-1 rounded-full bg-lime text-ink text-xs font-bold [--tilt:2deg]">
-                  Torra fresca
+                  Supercharge your mind
                 </span>
               </div>
             </div>
@@ -106,8 +106,9 @@ export default function StorePage() {
                 The bag
               </h2>
               <p className="mt-2 text-ink/70 leading-relaxed">
-                Single-origin coffee from the Montmare highlands. Notes of dark
-                chocolate, orange zest, and panela. Roasted this week, shipped
+                Single-origin beans for developers who ship. Notes of dark
+                chocolate, orange zest, and unreasonable productivity — one cup
+                is worth roughly ten standups. Roasted this week, shipped
                 whole-bean in a 250g valve bag.
               </p>
             </div>
