@@ -40,7 +40,13 @@ export async function POST(req: Request) {
       email?: string;
     };
     const name = (body.name || "Maria Silva").trim();
-    const email = body.email?.trim() || undefined;
+    // Email is optional — drop anything non-email-shaped rather than letting
+    // Yuno 400 the whole session (e.g. a last name typed into the email box).
+    const rawEmail = body.email?.trim();
+    const email =
+      rawEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)
+        ? rawEmail
+        : undefined;
 
     const [firstName, ...rest] = name.split(/\s+/);
     const lastName = rest.join(" ") || "Demo";

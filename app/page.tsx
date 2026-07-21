@@ -23,7 +23,10 @@ export default function StorePage() {
   function buyNow() {
     const params = new URLSearchParams();
     params.set("name", name.trim() || "Maria Silva");
-    if (email.trim()) params.set("email", email.trim());
+    // Optional field — forward only email-shaped input (server drops the rest
+    // too; this just keeps a stray value out of the order summary).
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      params.set("email", email.trim());
     router.push(`/checkout?${params.toString()}`);
   }
 
