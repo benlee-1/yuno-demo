@@ -36,14 +36,23 @@ build it slightly differently, with different holes.
 **Ask:** ship the tools with a "this one moves money" label and an optional
 built-in approval hook.
 
-### 3. `ALL_TOOLS_ENABLED` is too easy to reach for
+### 3. Full access is the default (verified in the source)
 
-The most visible config option in the docs turns on *every* tool — including
-the money-moving ones — in one line. That's the demo default, and it will end
-up in production code.
+If you don't pass a permissions config, the toolkit gives the agent **every
+tool** — including refunds, cancellations, and subscription kills. We checked
+the code: no config means no filtering. And the README's first quickstart
+example passes no config, so the first agent anyone copy-pastes together has
+full money-moving power without ever seeing the word "permissions."
+(`ALL_TOOLS_ENABLED` is just the explicit spelling of what silence already
+does.)
 
-**Ask:** make the pick-your-permissions style the documented default, and mark
-the all-tools shortcut as "not for production."
+Payments tooling normally works the other way — you request scopes
+explicitly, like API key scopes. Copy-paste code becomes production code, so
+the quickstart is the real default.
+
+**Ask:** default deny (no config = no tools, or an error), a scoped
+permissions block in the quickstart, and a "moves money" label on the
+dangerous tools.
 
 ### 4. The tools only fetch by ID — say so up front
 
@@ -114,7 +123,7 @@ enabled on your account. Two walls, no signpost.
 
 ---
 
-## What's genuinely good (say this too)
+## What's genuinely good
 
 - **`cancel-or-refund` is the perfect agent tool** — it decides by itself
   whether to cancel (not yet captured) or refund (captured). One verb, no
