@@ -39,10 +39,12 @@ body {
 .marquee-track {
   display: inline-flex;
   width: max-content;
-  animation: marquee-scroll 26s linear infinite;
+  /* Durations are 5× the original 26s/34s: each track half now repeats the
+     line 5×, and the -50% keyframe shift scales with track width — same px/s. */
+  animation: marquee-scroll 130s linear infinite;
 }
 .marquee-thin .marquee-track {
-  animation-duration: 34s;
+  animation-duration: 170s;
 }
 .marquee-track > span {
   display: inline-block;

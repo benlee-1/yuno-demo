@@ -30,7 +30,11 @@ export default function StorePage() {
   return (
     <div className="flex flex-col items-center gap-10">
       {/* Ticker band — full-bleed, slightly tilted */}
-      <div className="relative left-1/2 -translate-x-1/2 w-[110vw] -rotate-1">
+      {/* Width set inline: this Tailwind build drops `w-[110vw]`, letting the
+          band shrink to its text width and cut off on wide screens. No manual
+          centering — the items-center flex parent centers the overflow, and
+          adding left-1/2/-translate-x-1/2 on top double-shifts the band left. */}
+      <div className="relative -rotate-1" style={{ width: "110vw" }}>
         <Marquee
           items={TICKER}
           className="bg-primary text-lime font-display text-sm sm:text-base py-2.5 shadow-[0_8px_32px_rgba(62,79,224,0.25)]"
