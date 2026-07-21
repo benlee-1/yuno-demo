@@ -54,22 +54,11 @@ the quickstart is the real default.
 permissions block in the quickstart, and a "moves money" label on the
 dangerous tools.
 
-### 4. The tools only fetch by ID — say so up front
-
-There's no "search payments by customer name" tool, only "fetch payment by
-ID." That's a fair design (the merchant knows who Maria is; Yuno doesn't) —
-but nobody tells you. We figured out on our own that you need your own
-database next to the toolkit so the agent can turn "Maria's order" into a
-payment ID.
-
-**Ask:** one docs paragraph: "your agent needs a merchant-side lookup; here's
-the pattern."
-
 ---
 
 ## The docs
 
-### 5. The amounts example teaches people to overcharge 100×
+### 4. The amounts example teaches people to overcharge 100×
 
 The quickstart shows `"value": "2500"` — which reads as cents (like Stripe).
 Yuno actually uses plain currency units: R$ 89 is `89`, not `8900`. The
@@ -78,32 +67,11 @@ reference docs get it right; the quickstart contradicts them.
 **Ask:** fix the quickstart example. This is the single most dangerous line in
 the docs.
 
-### 6. Quickstart and reference disagree on how to start a checkout
-
-The quickstart says you can pass any made-up customer ID; the reference says
-you must create a real customer first and use its UUID. The reference is
-right (we tested). Bonus trap: card payments fail with a cryptic
-`INVALID_CUSTOMER_FOR_TOKEN` error unless you also pass the customer ID a
-second time inside the payment call — we found that by trial and error.
-
-### 7. Old function names still float around the SDK docs
-
-The browser SDK renamed its callbacks (`yunoCreatePayment` → `createPayment`,
-etc.). Docs and examples still mix old and new. The only fully reliable
-reference ended up being the TypeScript type definitions inside the package.
-
-### 8. Webhook payloads don't quite match the docs
-
-Real deliveries nest the payment under `data.payment`; the docs show it flat.
-And the dashboard's three webhook auth fields (api key / secret / HMAC
-checkbox) don't say which HTTP header each one becomes — we mapped them by
-experiment.
-
 ---
 
 ## The sandbox
 
-### 9. The "decline" test cards don't decline (biggest sandbox surprise)
+### 5. The "decline" test cards don't decline
 
 The documented decline cards get **approved** on our account. Reason: the
 account routes through several real provider sandboxes with failover — we
@@ -114,12 +82,6 @@ expired dates are blocked by the form itself before submission.
 
 **Ask:** one test card that declines at *every* provider, or a clear docs
 note that test-card outcomes depend on your account's routing setup.
-
-### 10. The 3DS test cards fail before you get to 3DS
-
-The special 3DS test cards are rejected by the card form itself ("Invalid
-card number") — so you can't even get far enough to find out 3DS isn't
-enabled on your account. Two walls, no signpost.
 
 ---
 
