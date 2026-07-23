@@ -60,6 +60,73 @@ presentation. Sandbox only — no real cards, ever.
   `#yuno-checkout`, `.text-red-700`, `border-l-lime`, and the ops chip labels;
   never uppercase contract text in the DOM (CSS `text-transform` is fine).
 
+## Feature Playground (`/admin`, `/w/<token>`, `lib/workspaces.ts`, `lib/crypto.ts`)
+
+BYO-credentials tester: an admin stores a company's SANDBOX keys as a
+"workspace", the company reaches it via an HMAC-signed expiring link.
+Security invariants — do not weaken:
+
+- **Workspace private keys** are AES-256-GCM encrypted at rest (`lib/crypto.ts`,
+  key derived from `WORKSPACE_ENC_KEY`), decrypted only inside the request that
+  needs them (`workspaceCredentials()`), and NEVER returned by any API route,
+  logged, or sent to the client. Admin list responses expose only a
+  `publicKeyHint` (last 4 chars of the public key).
+- **Workspace API calls are sandbox-pinned**: `yunoFetch(..., { creds })`
+  ignores `YUNO_API_URL` and always hits `api-sandbox.y.uno`; a creds object
+  never falls back to env keys mid-request.
+- **Admin fails closed**: no `ADMIN_CODE` env → `/api/admin/*` returns 503.
+  Auth = `x-admin-code` header, timing-safe compare, per-IP throttle
+  (20 attempts / 10 min) via `adminGate()` in `lib/workspaces.ts`.
+- **Links are capability URLs**: `/w/<token>` = HMAC-signed `{workspaceId, exp}`
+  (`signWorkspaceToken`), checked against DB-side `expires_at` + `revoked` too.
+  `next.config.ts` sets no-referrer / no-store / noindex / frame-deny headers on
+  `/admin`, `/w/*`, `/api/admin/*` so tokens never leak via Referer or caches.
+- Rotating `WORKSPACE_ENC_KEY` invalidates all stored secrets and all links.
+- New workspace creds are **validated live** before storage
+  (`validateSandboxCredentials`: customer create → checkout session create).
+- **Checkout scenarios** (`/w/<token>/checkout` + `/api/playground/checkout/session`
+  + `/api/playground/payments`): purchase | auth_only | decline | 3ds. Only
+  `auth_only` changes the payment body (`payment_method.detail.card.capture:false`
+  → Yuno returns status PENDING + sub_status AUTHORIZED); decline/3ds just steer
+  test-card choice. Orders carry `workspace_id` + `scenario` + `country`; the
+  payments route enforces order.workspace_id === token's workspace (cross-tenant
+  → 404) and a lifetime `PLAYGROUND_MAX_PAYMENTS` cap (default 200). Demo-store
+  read helpers in `lib/db.ts` filter `workspace_id IS NULL` so playground orders
+  never leak into the ops agent or briefings.
+- **SDK mount gotcha:** `#yuno-checkout` must exist BEFORE `startCheckout()` —
+  the playground page renders the payment section keyed on `session`, not on
+  phase "ready" (else the SDK throws ELEMENT_NOT_FOUND).
+- **Post-payment ops** (`/w/<token>/ops` + `/api/playground/ops`, one endpoint
+  multiplexed on `op`: list | inspect | capture | void | refund): every op with
+  a paymentId requires it to belong to a workspace order (`requireOwnedPayment`,
+  cross-tenant → 404). Capture body needs merchant_reference + reason + amount
+  (ALL required per OpenAPI); refund amount present = partial, absent = full;
+  void = `/cancel-or-refund` (cancels uncaptured, refunds captured). Wrappers in
+  `lib/yuno.ts` (`capturePayment`/`refundPayment`/`cancelOrRefundPayment`,
+  `extractTransactions` normalizes array/object/`transaction` shapes).
+- **Vault & MIT** (`/w/<token>/vault` + `/api/playground/vault`, op: session |
+  verify | token | mit): verify payments MUST be amount **0** (Yuno 400s
+  `INVALID_AMOUNT [amount must be zero]` otherwise — session amount matches).
+  Verify = `detail.card.verify:true` + `vault_on_success:true` + stored_credentials
+  {CARD_ON_FILE, FIRST}; MIT = workflow DIRECT, `payment_method.type:"CARD"` +
+  `vaulted_token` + detail.card `{capture:false, stored_credentials:{SUBSCRIPTION,
+  USED}}` (stored_credentials nests INSIDE detail.card). ⚠️ The vaulted_token
+  appears in the CREATE response ~80s before the GET read model — it is persisted
+  to `orders.vaulted_token` immediately and MIT reads the stored value; MIT/verify
+  inputs (token, customer) are resolved server-side from our order rows, never
+  from the client.
+- **Webhook inspector** (`/w/<token>/webhooks` + `/api/playground/webhooks` feed
+  + receiver `/api/webhooks/yuno/[workspace]`): the receiver mirrors the demo
+  route's parsing (raw body first, dedupe, never-500) but is STRICTER on auth —
+  a workspace with `webhook_secret` set REQUIRES a valid `x-hmac-signature`
+  (missing header = 401), unlike the demo route's optional-when-absent checks.
+  Events are tagged `workspace_id`; order updates stay inside the tenant. Demo
+  `listEvents`/`listEventsSince` filter `workspace_id IS NULL`.
+- **e2e:** `e2e/playground.spec.ts` runs only when `PLAYGROUND_E2E_LINK` holds a
+  live signed link (`E2E_BASE_URL` overrides the target server); skips otherwise.
+  Covers purchase, auth-only, capture→refund lifecycle, verify→vault→MIT→void,
+  and webhook delivery→feed — all against the live sandbox.
+
 ## Agent architecture (`lib/agent/*`)
 
 - `lib/agent/permissions.ts` — the permissions policy module: explicit

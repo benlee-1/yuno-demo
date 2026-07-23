@@ -206,6 +206,39 @@ execution.
   `stopWhen: stepCountIs(10)` caps any single run well under the ~15 req/min remote
   limit. A stable-egress deploy host is still preferred over roaming laptop IPs.
 
+## Feature Playground (BYO sandbox credentials)
+
+Beyond the fixed demo store, the repo hosts a multi-tenant tester: a Yuno
+admin creates a **workspace** holding a company's SANDBOX credentials at
+`/admin` (gated by `ADMIN_CODE`; keys validated live against the sandbox, then
+AES-256-GCM-encrypted at rest), and the company gets an HMAC-signed, expiring
+capability link `/w/<token>` — no login, no keys in their hands.
+
+Inside the playground, all running on the company's own account:
+
+- **Checkout scenarios** — purchase / authorize-only / decline / 3-D Secure
+  through the full Web SDK, configurable country · currency · amount, with
+  scenario-matched test-card hints.
+- **Vault & subscriptions** — $0 verify + vault (`verify: true`,
+  `vault_on_success: true`), live vaulted token, one-click MIT renewal
+  (DIRECT, SUBSCRIPTION/USED, auth-only).
+- **Post-payment ops** — inspect any workspace payment; capture (full or
+  partial), void/cancel, refund (full or partial), each behind an inline
+  confirm.
+- **Webhook inspector** — a dedicated endpoint per workspace
+  (`/api/webhooks/yuno/<workspaceId>`) with a live feed and HMAC verification
+  badges; when a webhook secret is configured, unsigned or tampered
+  deliveries are rejected with 401.
+
+Safety rails: workspace API calls are pinned to `api-sandbox.y.uno`; private
+keys are decrypted only inside the request that needs them and never reach
+logs, API responses, or the browser; links can be revoked instantly at
+`/admin`; cross-tenant payment/order/event access 404s; and a lifetime
+`PLAYGROUND_MAX_PAYMENTS` cap (default 200) blunts card-testing abuse.
+Playground rows are tagged `workspace_id` and filtered out of the demo
+store's agent tools and event feed. E2E coverage lives in
+`e2e/playground.spec.ts` (runs when `PLAYGROUND_E2E_LINK` is set).
+
 ## Setup
 
 ```bash
@@ -227,6 +260,9 @@ npm run dev                        # http://localhost:3000
 | `OPENROUTER_API_KEY` | Preferred — routes the `/ops` agent through OpenRouter (default model `anthropic/claude-sonnet-5`) |
 | `ANTHROPIC_API_KEY` | Fallback — direct Anthropic for the `/ops` agent, used only when `OPENROUTER_API_KEY` is unset |
 | `AGENT_MODEL` | Optional model override for the `/ops` agent (OpenRouter or Anthropic id, depending on active provider) |
+| `ADMIN_CODE` | Gates `/admin` and the workspace admin API — unset = admin disabled (fails closed) |
+| `WORKSPACE_ENC_KEY` | Master key for the playground: encrypts stored workspace private keys and signs `/w/<token>` links; rotating it invalidates both |
+| `PLAYGROUND_MAX_PAYMENTS` | Lifetime attempted-payments cap per workspace (default 200) |
 | `YUNO_API_URL` | Defaults to `https://api-sandbox.y.uno` — keep it pointed at sandbox |
 
 Keys come from the Yuno dashboard → **Developers → API keys**, **sandbox**
